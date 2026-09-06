@@ -120,6 +120,21 @@ def is_point_in_polygon(lon, lat, polygon):
         if ((p1y > lat) != (p2y > lat)) and (lon < (p2x - p1x) * (lat - p1y) / (p2y - p1y + 1e-9) + p1x): inside = not inside
     return inside
 
+def get_municipio_by_coord(lon, lat, geo_data):
+    if not geo_data: return "N/A", "N/A"
+    for feature in geo_data['features']:
+        geom = feature['geometry']
+        mun = feature['properties'].get('MUNICIPIO', 'N/A')
+        reg = feature['properties'].get('REGIONAL', 'N/A')
+        if geom['type'] == 'Polygon':
+            for ring in geom['coordinates']:
+                if is_point_in_polygon(lon, lat, ring): return mun, reg
+        elif geom['type'] == 'MultiPolygon':
+            for poly in geom['coordinates']:
+                for ring in poly:
+                    if is_point_in_polygon(lon, lat, ring): return mun, reg
+    return "N/A", "N/A"
+
 def extrair_coordenadas_vis(texto_coords):
     pontos = []
     for coord in texto_coords.strip().split():
@@ -219,6 +234,14 @@ def processar_um_kmz(f_name, f_bytes, base_map, geo_data):
                         coords = extrair_coordenadas_vis(pt.text)
                         if len(coords) > 0:
                             registros_flat.append({'ALIMENTADOR': nome_arquivo, 'REGIONAL': regional, 'MUNICIPIO': municipio, 'TIPO_GEOMETRIA': 'Ponto', 'TIPO_REDE': nome_pasta, 'NOME': nome_elemento, 'COORDS': coords[0], 'COR': cor_elemento})
+    if municipio == "N/A" and primeira_coord is not None and geo_data is not None:
+        mun_descob, reg_descob = get_municipio_by_coord(primeira_coord[1], primeira_coord[0], geo_data)
+        if mun_descob != "N/A":
+            municipio = mun_descob
+            regional = reg_descob if reg_descob != "N/A" else regional
+            for r in registros_flat:
+                r['MUNICIPIO'] = municipio
+                r['REGIONAL'] = regional
     if registros_flat: return pd.DataFrame(registros_flat)
     return None
 
@@ -258,7 +281,6 @@ def carregar_banco_redes():
         df = pd.read_sql("SELECT * FROM malha", conn)
         conn.close()
         if not df.empty:
-            # Blindagem: Evita que erros em dados individuais quebrem o carregamento
             def safe_json_loads(x):
                 try: return json.loads(x)
                 except: return None
@@ -1068,7 +1090,7 @@ with table_container:
                 st.dataframe(df_invalidas[cols_to_show], use_container_width=True)
 
 # -------------------------------------------------------------
-# 6. GERENCIAMENTO DE ZOOM E RENDERIZAÇÃO FINAL DO MAPA (ST_FOLIUM RESTAURADO)
+# 6. GERENCIAMENTO DE ZOOM E RENDERIZAÇÃO FINAL DO MAPA
 # -------------------------------------------------------------
 if zoom_lat is not None and zoom_lon is not None:
     mapa.fit_bounds([[zoom_lat - 0.001, zoom_lon - 0.001], [zoom_lat + 0.001, zoom_lon + 0.001]])
@@ -1093,5 +1115,4 @@ elif todas_lats and todas_lons:
 
 with map_container:
     st.markdown("### Mapa de Redes e Obras")
-    # A TRAVA DE PROTEÇÃO: returned_objects=[] impede a quebra de memória RAM e mantém a estética do Streamlit
     st_folium(mapa, use_container_width=True, height=850, returned_objects=[])
