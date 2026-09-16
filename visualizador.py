@@ -215,6 +215,7 @@ def processar_um_kmz(f_name, f_bytes, base_map, geo_data):
         sigla_match = re.search(r'\[([A-Z]{3})\]', nome_arquivo)
         if sigla_match: regional = sigla_match.group(1)
     registros_flat = []
+    primeira_coord = None
     for folder in root.findall('.//Folder'):
         name_tag = folder.find('name')
         if name_tag is not None and name_tag.text:
@@ -228,11 +229,15 @@ def processar_um_kmz(f_name, f_bytes, base_map, geo_data):
                     if ls.text:
                         coords = extrair_coordenadas_vis(ls.text)
                         if len(coords) > 1:
+                            if primeira_coord is None:
+                                primeira_coord = coords[0]
                             registros_flat.append({'ALIMENTADOR': nome_arquivo, 'REGIONAL': regional, 'MUNICIPIO': municipio, 'TIPO_GEOMETRIA': 'Linha', 'TIPO_REDE': nome_pasta, 'NOME': nome_elemento, 'COORDS': coords, 'COR': cor_elemento})
                 for pt in placemark.findall('.//Point/coordinates'):
                     if pt.text:
                         coords = extrair_coordenadas_vis(pt.text)
                         if len(coords) > 0:
+                            if primeira_coord is None:
+                                primeira_coord = coords[0]
                             registros_flat.append({'ALIMENTADOR': nome_arquivo, 'REGIONAL': regional, 'MUNICIPIO': municipio, 'TIPO_GEOMETRIA': 'Ponto', 'TIPO_REDE': nome_pasta, 'NOME': nome_elemento, 'COORDS': coords[0], 'COR': cor_elemento})
     if municipio == "N/A" and primeira_coord is not None and geo_data is not None:
         mun_descob, reg_descob = get_municipio_by_coord(primeira_coord[1], primeira_coord[0], geo_data)
@@ -252,10 +257,18 @@ def processar_e_salvar_kmz_paralelo(arquivos):
     df_lote = []
     
     with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = []
-        for f in arquivos: futures.append(executor.submit(processar_um_kmz, f.name, f.getvalue(), base_map, geo_data))
-        for future in futures:
-            df_alimentador = future.result()
+        futures = {
+            executor.submit(processar_um_kmz, f.name, f.getvalue(), base_map, geo_data): f.name
+            for f in arquivos
+        }
+        for future, nome_arquivo_processado in futures.items():
+            try:
+                df_alimentador = future.result()
+            except Exception as e:
+                # Um arquivo com problema não deve interromper todo o lote.
+                st.warning(f"⚠️ Falha ao processar '{nome_arquivo_processado}': {e}")
+                continue
+
             if df_alimentador is not None and not df_alimentador.empty:
                 df_alimentador['COORDS'] = df_alimentador['COORDS'].apply(json.dumps)
                 df_lote.append(df_alimentador)
