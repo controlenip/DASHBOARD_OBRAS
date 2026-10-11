@@ -224,7 +224,8 @@ def map_view(d):
     m=folium.Map(location=[-5.2,-45.0],zoom_start=7,tiles=None,min_zoom=6,max_zoom=18,control_scale=True)
     folium.TileLayer(tiles=tile,attr='Tiles © Esri',name=layer,max_zoom=18).add_to(m)
     folium.TileLayer('OpenStreetMap',name='Alternativa OSM',show=False).add_to(m)
-    m.fit_bounds([[-10.5,-48.9],[-1.0,-41.5]]) if mapdata.empty else None
+    if mapdata.empty:
+        m.fit_bounds([[-10.5,-48.9],[-1.0,-41.5]])
     folium.Rectangle(bounds=[[-10.6,-49.0],[-0.8,-41.3]],color='transparent',fill=False).add_to(m)
     cluster=MarkerCluster(name='Obras').add_to(m)
     # Preserve all points on map. Cap popup field text, never discard rows.
@@ -347,7 +348,10 @@ def pdf_bytes(tables):
     doc.build(story);return f.getvalue()
 
 def main():
-    st.sidebar.image(str(LOGO_PATH), use_container_width=True) if LOGO_PATH.exists() else st.sidebar.markdown('## NIP')
+    if LOGO_PATH.exists():
+        st.sidebar.image(str(LOGO_PATH), use_container_width=True)
+    else:
+        st.sidebar.markdown('## NIP')
     st.sidebar.caption('🔓 Consulta pública — sem necessidade de senha')
     admin_panel()
     try:
