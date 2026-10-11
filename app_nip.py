@@ -1,5 +1,6 @@
 """NIP | Gestao Integrada de Obras - Streamlit.
-Configuracao: DATABASE_URL e ADMIN_PASSWORD em .streamlit/secrets.toml ou variaveis de ambiente.
+Configuracao: DATABASE_URL e ADMIN_PASSWORD em Secrets ou variaveis de ambiente.
+Leitura publica sem login; senha exigida apenas para publicar novas bases.
 PostgreSQL para hospedagem multipla; SQLite somente em volume persistente.
 """
 import os, io, re, json, time, hmac, hashlib, secrets, unicodedata
@@ -43,7 +44,6 @@ def config(k, default=None):
 
 DB_URL=config('DATABASE_URL','sqlite:///nip_dashboard.sqlite3')
 ADMIN_PASSWORD=config('ADMIN_PASSWORD')
-VIEWER_PASSWORD=config('VIEWER_PASSWORD')
 LOGO_PATH=Path(__file__).with_name('logo_nip.png')
 
 @st.cache_resource(show_spinner=False)
@@ -76,24 +76,53 @@ def insert_snapshot(df,filename,actor):
         c.execute(text('INSERT INTO snapshots(imported_at,actor,filename,row_count,payload) VALUES(:date,:actor,:file,:n,:payload)'), {'date':datetime.now().isoformat(timespec='seconds'),'actor':actor,'file':filename[:255],'n':len(df),'payload':payload})
     st.cache_data.clear()
 
-def login():
-    if not ADMIN_PASSWORD:
-        st.error('ADMIN_PASSWORD não configurada. Configure-a no secrets do Streamlit antes de publicar.')
-        st.stop()
-    if 'role' not in st.session_state: st.session_state.role=None
-    if st.session_state.role: return st.session_state.role
-    st.title('NIP | Acesso ao painel')
-    with st.form('login'):
-        user=st.text_input('Identificação')
-        passwd=st.text_input('Senha',type='password')
-        submit=st.form_submit_button('Entrar',use_container_width=True)
-    if submit:
-        if hmac.compare_digest(passwd, str(ADMIN_PASSWORD)):
-            st.session_state.role='admin';st.session_state.actor=user.strip() or 'Administrador';st.rerun()
-        elif VIEWER_PASSWORD and hmac.compare_digest(passwd,str(VIEWER_PASSWORD)):
-            st.session_state.role='viewer';st.session_state.actor=user.strip() or 'Consulta';st.rerun()
-        else: st.error('Credenciais inválidas')
-    st.stop()
+def admin_panel():
+    """Public dashboard; only spreadsheet publication requires administrator authentication."""
+    if 'admin_authenticated' not in st.session_state:
+        st.session_state.admin_authenticated = False
+    with st.sidebar.expander('🔒 Administração / Atualizar base', expanded=False):
+        if not st.session_state.admin_authenticated:
+            st.caption('O dashboard é público. A senha é necessária apenas para enviar uma nova planilha.')
+            if not ADMIN_PASSWORD:
+                st.warning('Importação bloqueada: configure ADMIN_PASSWORD nos Secrets do Streamlit.')
+                return
+            with st.form('admin_login_form', clear_on_submit=True):
+                identification = st.text_input('Identificação do administrador')
+                password = st.text_input('Senha de administrador', type='password')
+                submit = st.form_submit_button('Desbloquear importação', use_container_width=True)
+            if submit:
+                if password and hmac.compare_digest(password, str(ADMIN_PASSWORD)):
+                    st.session_state.admin_authenticated = True
+                    st.session_state.admin_actor = identification.strip() or 'Administrador'
+                    st.rerun()
+                else:
+                    st.error('Senha incorreta.')
+            return
+
+        st.success('Publicação de bases autorizada nesta sessão.')
+        if st.button('Bloquear administração', key='admin_logout'):
+            st.session_state.admin_authenticated = False
+            st.session_state.pop('admin_actor', None)
+            st.rerun()
+        f = st.file_uploader('Excel com aba NOTAS', type=['xlsx'], key='admin_file')
+        if f is not None and st.button('Publicar base para todos', type='primary', key='admin_publish'):
+            if not st.session_state.admin_authenticated:
+                st.error('Acesso administrativo necessário.')
+                return
+            try:
+                with st.spinner('Validando e gravando versão compartilhada...'):
+                    x = read_excel(f)
+                    if x.empty:
+                        raise ValueError('A planilha NOTAS está vazia')
+                    insert_snapshot(x, f.name, st.session_state.get('admin_actor', 'Administrador'))
+                st.success('Base publicada para todos os visitantes.')
+                st.rerun()
+            except Exception as ex:
+                st.error(f'Importação recusada: {ex}')
+        hist = snapshots()
+        if not hist.empty:
+            st.caption('Versões publicadas')
+            st.dataframe(hist[['id','imported_at','row_count','filename']].head(8), hide_index=True)
 
 REQUIRED=['ID SISCO','LEVANTADOR','STATUS LIST','STATUS SAP','STATUS SISCO','REGIONAL','MUNICIPIO','DATA DESPACHO']
 FIELDS=['ID SISCO','PROTOCOLO','TIPO NOTA','LEVANTADOR','DATA DESPACHO','DATA ABERTURA','PRIORIDADE','STATUS SAP','STATUS SISCO','STATUS LIST','CONTRATO','REGIONAL','MUNICIPIO','NOME','LATITUDE','LONGITUDE','ENDEREÇO','LOCALIDADE','ÁREA DE ATUAÇÃO (LEVANTADOR)']
@@ -318,26 +347,16 @@ def pdf_bytes(tables):
     doc.build(story);return f.getvalue()
 
 def main():
-    role=login()
-    st.sidebar.image(str(LOGO_PATH),use_container_width=True) if LOGO_PATH.exists() else st.sidebar.markdown('## NIP')
-    st.sidebar.caption('Acesso: '+('Administrador' if role=='admin' else 'Consulta'))
-    if st.sidebar.button('Sair'):st.session_state.clear();st.rerun()
-    if role=='admin':
-        with st.sidebar.expander('Administração / importar base',expanded=False):
-            f=st.file_uploader('Excel com aba NOTAS',type=['xlsx'],key='file')
-            if f and st.button('Publicar base para todos',type='primary'):
-                try:
-                    with st.spinner('Validando e gravando versão...'):
-                        x=read_excel(f)
-                        if x.empty:raise ValueError('A planilha NOTAS está vazia')
-                        insert_snapshot(x,f.name,st.session_state.actor)
-                    st.success('Nova versão publicada para todos os usuários.');st.rerun()
-                except Exception as ex:st.error(f'Importação recusada: {ex}')
-            hist=snapshots()
-            if not hist.empty:st.dataframe(hist[['id','imported_at','row_count','filename']].head(8),hide_index=True)
-    sid=latest_id()
+    st.sidebar.image(str(LOGO_PATH), use_container_width=True) if LOGO_PATH.exists() else st.sidebar.markdown('## NIP')
+    st.sidebar.caption('🔓 Consulta pública — sem necessidade de senha')
+    admin_panel()
+    try:
+        sid = latest_id()
+    except Exception as ex:
+        st.error('Não foi possível consultar o banco de dados compartilhado. Verifique DATABASE_URL e a disponibilidade do servidor.')
+        st.stop()
     if sid is None:
-        st.warning('Nenhuma base publicada. Entre como administrador e importe o arquivo Excel com a aba NOTAS.')
+        st.info('Ainda não existe uma base publicada. Abra 🔒 Administração / Atualizar base na barra lateral para importar a primeira planilha.')
         st.stop()
     # Fresh database lookup on every Streamlit rerun. Automatic refresh also available.
     now=st.sidebar.button('Verificar atualização da base')
