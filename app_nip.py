@@ -1,5 +1,5 @@
 """NIP | Gestao Integrada de Obras - Streamlit.
-Fonte: arquivo Excel base_notas.xlsx (aba NOTAS).
+Fonte: arquivo Excel BASE_LEVANTAMENTO_ATUALIZADA.xlsx (aba NOTAS).
 Consulta publica. Publicacao compartilhada via GitHub com token administrativo nos Secrets.
 """
 import os, io, re, json, time, hmac, hashlib, secrets, unicodedata, base64
@@ -44,7 +44,7 @@ ADMIN_PASSWORD=config('ADMIN_PASSWORD')
 GITHUB_TOKEN=config('GITHUB_TOKEN','')
 GITHUB_REPO=config('GITHUB_REPO','controlenip/DASHBOARD_OBRAS')
 GITHUB_BRANCH=config('GITHUB_BRANCH','main')
-EXCEL_FILE='base_notas.xlsx'
+EXCEL_FILE='BASE_LEVANTAMENTO_ATUALIZADA.xlsx'
 LOCAL_EXCEL=Path(__file__).with_name(EXCEL_FILE)
 LOGO_PATH=Path(__file__).with_name('logo_nip.png')
 
@@ -84,7 +84,7 @@ def source_bytes():
             raise RuntimeError('Não foi possível consultar o Excel compartilhado no GitHub: '+str(exc)) from exc
         st.warning('GitHub indisponível. Exibindo cópia inicial do Excel incluída no aplicativo, que pode estar desatualizada.')
     if LOCAL_EXCEL.exists():return LOCAL_EXCEL.read_bytes(),'Excel inicial do repositório'
-    raise FileNotFoundError('Envie base_notas.xlsx para a raiz do repositório GitHub.')
+    raise FileNotFoundError('Envie BASE_LEVANTAMENTO_ATUALIZADA.xlsx para a raiz do repositório GitHub.')
 
 def latest_id():
     # Kept for compatibility with old main() calling pattern.
@@ -414,7 +414,7 @@ def main():
     except Exception as exc:
         st.error('Não foi possível ler a aba NOTAS do Excel compartilhado.')
         st.warning(str(exc))
-        st.info('Adicione o arquivo base_notas.xlsx na raiz do repositório GitHub, ao lado de app_nip.py.')
+        st.info('Adicione o arquivo BASE_LEVANTAMENTO_ATUALIZADA.xlsx na raiz do repositório GitHub, ao lado de app_nip.py.')
         st.stop()
     if st.sidebar.button('Verificar atualização da base'):
         st.rerun()
