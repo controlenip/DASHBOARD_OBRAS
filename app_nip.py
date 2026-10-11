@@ -1,9 +1,8 @@
 """NIP | Gestao Integrada de Obras - Streamlit.
-Configuracao: DATABASE_URL e ADMIN_PASSWORD em Secrets ou variaveis de ambiente.
-Leitura publica sem login; senha exigida apenas para publicar novas bases.
-PostgreSQL para hospedagem multipla; SQLite somente em volume persistente.
+Fonte: arquivo Excel base_notas.xlsx (aba NOTAS).
+Consulta publica. Publicacao compartilhada via GitHub com token administrativo nos Secrets.
 """
-import os, io, re, json, time, hmac, hashlib, secrets, unicodedata
+import os, io, re, json, time, hmac, hashlib, secrets, unicodedata, base64
 from datetime import datetime, date, timedelta
 from collections import Counter
 from pathlib import Path
@@ -11,8 +10,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 import streamlit as st
-from sqlalchemy import create_engine, text
-from sqlalchemy.pool import NullPool
+import requests
 import folium
 from folium.plugins import MarkerCluster, HeatMap
 from streamlit_folium import st_folium
@@ -42,39 +40,96 @@ def config(k, default=None):
     except Exception: pass
     return os.environ.get(k,default)
 
-DB_URL=config('DATABASE_URL','sqlite:///nip_dashboard.sqlite3')
 ADMIN_PASSWORD=config('ADMIN_PASSWORD')
+GITHUB_TOKEN=config('GITHUB_TOKEN','')
+GITHUB_REPO=config('GITHUB_REPO','controlenip/DASHBOARD_OBRAS')
+GITHUB_BRANCH=config('GITHUB_BRANCH','main')
+EXCEL_FILE='base_notas.xlsx'
+LOCAL_EXCEL=Path(__file__).with_name(EXCEL_FILE)
 LOGO_PATH=Path(__file__).with_name('logo_nip.png')
 
-@st.cache_resource(show_spinner=False)
-def engine(url):
-    if url.startswith('postgres://'): url='postgresql://'+url[len('postgres://'):]
-    return create_engine(url, pool_pre_ping=True, poolclass=NullPool, connect_args={"check_same_thread":False} if url.startswith('sqlite:') else {})
+# Public GitHub repository hosts the shared Excel; visitors do not require credentials.
+# A private repository can be read with GITHUB_TOKEN, but then visitors need a
+# server-side configured token with repository read access.
+def github_api(suffix):
+    return f'https://api.github.com/repos/{GITHUB_REPO}/{suffix}'
 
-def initialize():
-    eng=engine(DB_URL)
-    with eng.begin() as c:
-        c.execute(text('CREATE TABLE IF NOT EXISTS snapshots (id INTEGER PRIMARY KEY, imported_at TEXT NOT NULL, actor TEXT NOT NULL, filename TEXT NOT NULL, row_count INTEGER NOT NULL, payload TEXT NOT NULL)')) if eng.dialect.name=='sqlite' else c.execute(text('CREATE TABLE IF NOT EXISTS snapshots (id BIGSERIAL PRIMARY KEY, imported_at TEXT NOT NULL, actor TEXT NOT NULL, filename TEXT NOT NULL, row_count INTEGER NOT NULL, payload TEXT NOT NULL)'))
-    return eng
+def github_headers(auth=False):
+    h={'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'nip-dashboard-streamlit'}
+    if GITHUB_TOKEN and auth: h['Authorization']='Bearer '+GITHUB_TOKEN
+    return h
+
+def github_file():
+    if not GITHUB_REPO or '/' not in GITHUB_REPO:
+        raise ValueError('GITHUB_REPO precisa estar no formato usuario/repositorio')
+    r=requests.get(github_api('contents/'+EXCEL_FILE),headers=github_headers(bool(GITHUB_TOKEN)),params={'ref':GITHUB_BRANCH},timeout=35)
+    if r.status_code==404: return None
+    r.raise_for_status()
+    item=r.json()
+    if item.get('content'):
+        return base64.b64decode(item['content'].replace('\n',''))
+    # API omits inline content for larger files; use Git blob API by SHA instead.
+    blob=requests.get(github_api('git/blobs/'+item['sha']),headers=github_headers(bool(GITHUB_TOKEN)),timeout=60)
+    blob.raise_for_status()
+    data=blob.json()
+    if data.get('encoding')!='base64':raise RuntimeError('GitHub não retornou a planilha em base64')
+    return base64.b64decode(data['content'].replace('\n',''))
+
+def source_bytes():
+    try:
+        blob=github_file()
+        if blob: return blob,'GitHub (base compartilhada)'
+    except Exception as exc:
+        if not LOCAL_EXCEL.exists():
+            raise RuntimeError('Não foi possível consultar o Excel compartilhado no GitHub: '+str(exc)) from exc
+        st.warning('GitHub indisponível. Exibindo cópia inicial do Excel incluída no aplicativo, que pode estar desatualizada.')
+    if LOCAL_EXCEL.exists():return LOCAL_EXCEL.read_bytes(),'Excel inicial do repositório'
+    raise FileNotFoundError('Envie base_notas.xlsx para a raiz do repositório GitHub.')
 
 def latest_id():
-    with initialize().connect() as c:
-        return c.execute(text('SELECT MAX(id) FROM snapshots')).scalar()
+    # Kept for compatibility with old main() calling pattern.
+    return 1 if (LOCAL_EXCEL.exists() or bool(GITHUB_REPO)) else None
 
 def snapshots():
-    with initialize().connect() as c:
-        return pd.read_sql(text('SELECT id,imported_at,actor,filename,row_count FROM snapshots ORDER BY id DESC'),c)
+    # Historical versions are individual commits containing the Excel.
+    try:
+        r=requests.get(github_api('commits'),params={'path':EXCEL_FILE,'sha':GITHUB_BRANCH,'per_page':15},headers=github_headers(bool(GITHUB_TOKEN)),timeout=25)
+        if not r.ok:return pd.DataFrame()
+        return pd.DataFrame([{'id':x['sha'],'imported_at':x['commit']['committer']['date'],'actor':x['commit']['author'].get('name','Administrador'),'filename':EXCEL_FILE,'row_count':0} for x in r.json()])
+    except Exception:return pd.DataFrame()
 
 def get_snapshot(sid):
-    with initialize().connect() as c:
-        s=c.execute(text('SELECT payload FROM snapshots WHERE id=:id'),{'id':int(sid)}).scalar()
-    return pd.read_json(io.StringIO(s),orient='records') if s else pd.DataFrame()
+    if sid==1:
+        contents,source=source_bytes()
+        st.session_state['_excel_source']=source
+        return read_excel(io.BytesIO(contents))
+    # Read older Excel directly from the git tree at commit SHA.
+    ref=str(sid)
+    r=requests.get(github_api('contents/'+EXCEL_FILE),params={'ref':ref},headers=github_headers(bool(GITHUB_TOKEN)),timeout=30)
+    r.raise_for_status()
+    item=r.json()
+    blob=requests.get(github_api('git/blobs/'+item['sha']),headers=github_headers(bool(GITHUB_TOKEN)),timeout=60)
+    blob.raise_for_status()
+    return read_excel(io.BytesIO(base64.b64decode(blob.json()['content'].replace('\n',''))))
 
-def insert_snapshot(df,filename,actor):
-    payload=df.to_json(orient='records',date_format='iso',force_ascii=False)
-    with initialize().begin() as c:
-        c.execute(text('INSERT INTO snapshots(imported_at,actor,filename,row_count,payload) VALUES(:date,:actor,:file,:n,:payload)'), {'date':datetime.now().isoformat(timespec='seconds'),'actor':actor,'file':filename[:255],'n':len(df),'payload':payload})
+def insert_snapshot(upload,filename,actor):
+    if not GITHUB_TOKEN:
+        raise RuntimeError('Para publicar para todos, configure GITHUB_TOKEN nos Secrets do Streamlit com acesso Contents: Read and write.')
+    if '/' not in GITHUB_REPO:raise RuntimeError('GITHUB_REPO inválido.')
+    contents=upload.getvalue() if hasattr(upload,'getvalue') else bytes(upload)
+    # Validation before publishing prevents a broken dashboard.
+    checked=read_excel(io.BytesIO(contents))
+    if checked.empty:raise ValueError('A aba NOTAS está vazia.')
+    url=github_api('contents/'+EXCEL_FILE)
+    headers=github_headers(True)
+    old=requests.get(url,headers=headers,params={'ref':GITHUB_BRANCH},timeout=40)
+    if old.status_code not in (200,404):old.raise_for_status()
+    data={'message':f'Atualizar Excel do dashboard NIP - {actor}', 'content':base64.b64encode(contents).decode('ascii'),'branch':GITHUB_BRANCH}
+    if old.status_code==200:data['sha']=old.json()['sha']
+    res=requests.put(url,json=data,headers=headers,timeout=120)
+    if not res.ok:raise RuntimeError(f'GitHub recusou publicação (HTTP {res.status_code}): verifique permissão Contents Write e branch.')
     st.cache_data.clear()
+    return len(checked)
 
 def admin_panel():
     """Public dashboard; only spreadsheet publication requires administrator authentication."""
@@ -111,10 +166,7 @@ def admin_panel():
                 return
             try:
                 with st.spinner('Validando e gravando versão compartilhada...'):
-                    x = read_excel(f)
-                    if x.empty:
-                        raise ValueError('A planilha NOTAS está vazia')
-                    insert_snapshot(x, f.name, st.session_state.get('admin_actor', 'Administrador'))
+                    insert_snapshot(f, f.name, st.session_state.get('admin_actor', 'Administrador'))
                 st.success('Base publicada para todos os visitantes.')
                 st.rerun()
             except Exception as ex:
@@ -354,19 +406,20 @@ def main():
         st.sidebar.markdown('## NIP')
     st.sidebar.caption('🔓 Consulta pública — sem necessidade de senha')
     admin_panel()
+    if not GITHUB_TOKEN:
+        st.sidebar.info('Consulta pública habilitada. Para publicação pela interface, configure GITHUB_TOKEN nos Secrets.')
     try:
-        sid = latest_id()
-    except Exception as ex:
-        st.error('Não foi possível consultar o banco de dados compartilhado. Verifique DATABASE_URL e a disponibilidade do servidor.')
+        raw=get_snapshot(1)
+        d=prepared(raw)
+    except Exception as exc:
+        st.error('Não foi possível ler a aba NOTAS do Excel compartilhado.')
+        st.warning(str(exc))
+        st.info('Adicione o arquivo base_notas.xlsx na raiz do repositório GitHub, ao lado de app_nip.py.')
         st.stop()
-    if sid is None:
-        st.info('Ainda não existe uma base publicada. Abra 🔒 Administração / Atualizar base na barra lateral para importar a primeira planilha.')
-        st.stop()
-    # Fresh database lookup on every Streamlit rerun. Automatic refresh also available.
-    now=st.sidebar.button('Verificar atualização da base')
-    raw=get_snapshot(sid);d=prepared(raw)
+    if st.sidebar.button('Verificar atualização da base'):
+        st.rerun()
     st.markdown('<div class="niphero"><h2>GRUPO ÍGNEO / NIP | Gestão Integrada de Obras</h2><small>Dashboard geográfico, distribuição de equipes e acompanhamento de prazos</small></div>',unsafe_allow_html=True)
-    st.caption(f'Base compartilhada #{sid} • {len(d):,} obras • atualizado em {datetime.now():%d/%m/%Y %H:%M} • referência de prazos: data do computador servidor'.replace(',','.'))
+    st.caption(f'Fonte: aba NOTAS • {st.session_state.get("_excel_source", "Excel") } • {len(d):,} obras • consulta {datetime.now():%d/%m/%Y %H:%M}'.replace(',','.'))
     filtered=filters(d)
     st.sidebar.download_button('Exportar seleção CSV',filtered[FIELDS].to_csv(index=False,sep=';').encode('utf-8-sig'),file_name='obras_filtradas.csv',mime='text/csv')
     tabs=st.tabs(['🗺️ Visão Geral','👷 Levantadores','⏱️ Prazos e Prioridades','🔍 Qualidade da Base','📄 Relatórios'])
@@ -397,8 +450,8 @@ def main():
         quality(filtered)
         hist=snapshots()
         if len(hist)>1:
-            previous=st.selectbox('Comparar base atual com versão anterior',hist.iloc[1:].apply(lambda x:f"#{x['id']} — {x['imported_at']} ({x['filename']})",axis=1).tolist())
-            old_id=int(previous.split(' — ')[0].lstrip('#'))
+            previous=st.selectbox('Comparar base atual com versão anterior',hist.iloc[1:].apply(lambda x:f"{x['id']} — {x['imported_at']} ({x['filename']})",axis=1).tolist())
+            old_id=previous.split(' — ')[0]
             new,gone,changes=comparison(d,prepared(get_snapshot(old_id)))
             metric_grid([('Novas notas',new),('Notas ausentes na versão atual',gone),('Mudanças de campos',len(changes))])
             if len(changes):st.dataframe(changes,hide_index=True,use_container_width=True)
