@@ -452,7 +452,8 @@ function nipTableInit(){
 function nipOpsRows(){
  const q=$n('nipOpsTableSearch').value.trim().toLocaleLowerCase('pt-BR');
  const keys=['PROTOCOLO','ID SISCO','NOME','SGO','Nº SGO','N° SGO','NÚMERO SGO','MUNICIPIO','LEVANTADOR','REGIONAL','ENDEREÇO'];
- const rows=CURRENT.filter(r=>(!q||keys.some(k=>nipTableColumnValue(r,k).toLocaleLowerCase('pt-BR').includes(q)))&&nipTableAppliedFilters.every(f=>{const raw=nipTableColumnValue(r,f.col);return f.values.some(v=>raw.toLocaleLowerCase('pt-BR')===v.toLocaleLowerCase('pt-BR'))}));
+ const bridge=window.nipReportBridge;
+  const rows=CURRENT.filter(r=>(!bridge||bridge.notes.has(String(r.PROTOCOLO??'').trim())||bridge.notes.has(String(r['ID SISCO']??'').trim()))&&(!q||keys.some(k=>nipTableColumnValue(r,k).toLocaleLowerCase('pt-BR').includes(q)))&&nipTableAppliedFilters.every(f=>{const raw=nipTableColumnValue(r,f.col);return f.values.some(v=>raw.toLocaleLowerCase('pt-BR')===v.toLocaleLowerCase('pt-BR'))}));
  const sort=$n('nipOpsTableSort').value||'PROTOCOLO';
  const sign=nipTableAscending?1:-1;
  rows.sort((a,b)=>{
@@ -485,6 +486,8 @@ function nipOpsExport(rows,name){if(window.XLSX){exportXlsx([{name:'NOTAS',rows}
 function nipOpsExportCsv(rows,name){let cols=Object.keys(rows[0]||{}),lines=[cols.join(';'),...rows.map(r=>cols.map(c=>'"'+String(r[c]??'').replace(/"/g,'""')+'"').join(';'))];let blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),3000)}
 function nipOpsRefresh(){nipOpsStaffRefresh();nipOpsRegionRefresh();nipOpsCalendarRefresh();nipOpsPendingRefresh();nipOpsLayerRefresh();nipOpsTableRefresh();nipOpsIntegrityRefresh()}
 const nipOpsPriorRender=render;render=function(){nipOpsPriorRender();nipOpsRefresh()};
+window.nipRefreshReports=()=>{nipOpsPage=0;nipOpsTableRefresh()};
+window.nipOpenReportTab=()=>{tab(4);nipOpsPage=0;nipOpsTableRefresh();};
 $n('nipOpsStaffSelect').onchange=nipOpsStaffRefresh;$n('nipOpsStaffMap').onclick=()=>{let name=$n('nipOpsStaffSelect').value;if(!name)return;tab(0);let pts=CURRENT.filter(r=>staffLoadStatus(r)&&nipOpsStaffName(r)===name).map(coord).filter(c=>c&&MARANHAO_BOUNDS.contains(c));if(pts.length){if(pts.length===1)map.setView(pts[0],13);else map.fitBounds(L.latLngBounds(pts),{padding:[40,40],maxZoom:13});}else alert('Levantador sem coordenadas válidas na seleção.')};
 $n('nipOpsPrevMonth').onclick=()=>{nipOpsMonth=new Date(nipOpsMonth.getFullYear(),nipOpsMonth.getMonth()-1,1);nipOpsCalendarRefresh()};$n('nipOpsNextMonth').onclick=()=>{nipOpsMonth=new Date(nipOpsMonth.getFullYear(),nipOpsMonth.getMonth()+1,1);nipOpsCalendarRefresh()};$n('nipOpsCalendarGrid').onclick=e=>{let b=e.target.closest('[data-day]');if(b){nipOpsDay=b.dataset.day;nipOpsCalendarRefresh()}};
 $n('nipOpsPendingType').onchange=nipOpsPendingRefresh;$n('nipOpsPendingExport').onclick=()=>nipOpsExport(window.nipOpsPendingRows||[],'nip_pendencias_'+$n('nipOpsPendingType').value);
@@ -725,7 +728,7 @@ window.nipResetMapState=function(){
 <script>
 (function(){
 'use strict';
-const records=__NIP_LIST_PAYLOAD__;
+const records=__NIP_LIST_PAYLOAD__;window.nipQualitySourceRows=records;
 const source=__NIP_LIST_STATUS__;
 const nav=document.getElementById('nipNav');
 if(!nav)return;
@@ -804,7 +807,7 @@ nav.addEventListener('click',e=>{if(!e.target.closest('button[data-tab],button[d
 </style>
 <script>
 (function(){'use strict';
-const rows=__NIP_PRODUCTIVITY_PAYLOAD__,source=__NIP_PRODUCTIVITY_STATUS__;
+const rows=__NIP_PRODUCTIVITY_PAYLOAD__;window.nipProductionSourceRows=rows;const source=__NIP_PRODUCTIVITY_STATUS__;
 const nav=document.getElementById('nipNav'),main=document.querySelector('main');if(!nav||!main)return;
 const b=document.createElement('button');b.type='button';b.textContent='Produtividade';b.dataset.productivity='1';nav.append(b);
 const panel=document.createElement('div');panel.id='nip-tab-produtividade';panel.className='nip-tab nip-hidden';main.append(panel);
@@ -851,7 +854,7 @@ b.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(x=
 <script>
 (function(){'use strict';
 const raw=__NIP_ANALYTICS_PAYLOAD__;if(!raw || !Array.isArray(raw.rows))return;
-const records=raw.rows,validation=raw.validation||{};
+const records=raw.rows,validation=raw.validation||{};window.nipAdvancedSourceRows=records;
 const find=id=>document.getElementById(id),fmt=n=>Number(n||0).toLocaleString('pt-BR'),pct=(a,b)=>b?(100*a/b).toFixed(1).replace('.',',')+'%':'—';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
@@ -925,6 +928,70 @@ for(const id of ['advTimeBase','advPeriod','advReference','advProdStaff','advEvo
 for(const id of ['advGoalWorks','advGoalPosts'])find(id).addEventListener('input',()=>{try{localStorage.setItem(saveGoalKey,JSON.stringify({works:Number(find('advGoalWorks').value),posts:Number(find('advGoalPosts').value)}))}catch(e){}drawProduction()});
 find('advValidCards').innerHTML=Object.entries(validation).map(([k,v])=>card(k.replaceAll('_',' '),fmt(v))).join('');find('advValidDetail').innerHTML=note('Política conservadora: notas repetidas são sinalizadas e todas as suas linhas são retiradas apenas dos novos indicadores avançados; os painéis anteriores continuam inalterados. Notas ausentes também ficam fora. Dados faltantes não são convertidos em zero para validação; nos somatórios de postes, o valor ausente contribui com zero e é contado separadamente.')+table(['Linha','Nota','Levantador','Problema'],records.filter(r=>r.duplicada||!r.nota||!r.levantador||!r.q||!r.u||r.novos===null||r.existentes===null).slice(0,250).map(r=>`<tr><td>${r.linha}</td><td>${esc(r.nota)}</td><td>${esc(r.levantador)}</td><td>${esc([r.duplicada?'Duplicada':'',!r.nota?'Sem nota':'',!r.levantador?'Sem levantador':'',!r.q?'Sem Q':'',!r.u?'Sem U':'',r.existentes===null?'R vazio/inválido':'',r.novos===null?'S vazio/inválido':''].filter(Boolean).join(' · '))}</td></tr>`));
 drawProduction();
+})();
+</script>
+
+<style>
+.nip-link-card{cursor:pointer!important;transition:transform .12s,box-shadow .12s;outline-offset:3px}
+.nip-link-card:hover,.nip-link-card:focus-visible{transform:translateY(-2px);box-shadow:0 0 0 2px #08798c!important}
+.nip-cross-box{margin:15px 0;padding:15px;background:#f8fbfe;border:1px solid #c7dce9;border-radius:10px;color:#173653}
+.nip-cross-box h3{margin:0 0 9px;font-size:17px}.nip-cross-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.nip-cross-bar button{padding:8px 12px;background:#076e83;color:#fff;border:0;border-radius:7px;cursor:pointer;font-weight:600}
+.nip-cross-bar button.secondary{background:#eaf2f7;color:#17445e;border:1px solid #a8c5d5}
+.nip-cross-note{font-size:12px;color:#526e82;line-height:1.45;margin:5px 0}
+.nip-cross-scroller{overflow:auto;max-height:420px}.nip-cross-table{width:100%;border-collapse:collapse;font-size:12px;white-space:nowrap}
+.nip-cross-table th,.nip-cross-table td{text-align:left;padding:8px;border-bottom:1px solid #dce6ed}
+.nip-cross-table th{background:#e7f0f5;position:sticky;top:0}
+.nip-cross-chip{display:inline-block;background:#e5f2f7;border:1px solid #b1d5e2;color:#0d4966;padding:5px 8px;border-radius:8px;font-size:12px;margin-right:5px}
+</style>
+<script>
+(function(){'use strict';
+const get=id=>document.getElementById(id);
+const norm=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toUpperCase().replace(/\s+/g,' ');
+const html=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const note=r=>String(r.PROTOCOLO??r['ID SISCO']??'').trim();
+const isNoStaff=r=>!String(r.LEVANTADOR??'').trim()||norm(r.LEVANTADOR)==='SEM LEVANTADOR';
+function showTab(id){const panel=get(id),nav=get('nipNav');if(!panel||!nav)return;document.querySelectorAll('.nip-tab').forEach(x=>x.classList.add('nip-hidden'));panel.classList.remove('nip-hidden');nav.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));const ix={'nip-tab-prazos':2,'nip-tab-relatorios':4};if(id in ix){nav.querySelectorAll('button[data-tab]').forEach(b=>b.classList.toggle('selected',Number(b.dataset.tab)===ix[id]));}else{const kind=id==='nip-tab-produtividade'?'productivity':'qualityList';nav.querySelector('button[data-'+(kind==='productivity'?'productivity':'quality-list')+']')?.classList.add('selected');}panel.scrollIntoView({behavior:'smooth',block:'start'});}
+function box(id,title,parent,after){let el=get(id);if(!el){el=document.createElement('section');el.id=id;el.className='nip-cross-box';el.innerHTML='<h3>'+html(title)+'</h3><p class="nip-cross-note" data-info></p><div class="nip-cross-bar"><button type="button" data-report>Ver estas obras em RELATÓRIOS →</button><button class="secondary" type="button" data-clear>Limpar seleção</button></div><div class="nip-cross-scroller"><table class="nip-cross-table"><thead data-head></thead><tbody data-body></tbody></table></div>';if(after)after.after(el);else parent.prepend(el);}else if(el.parentElement!==parent)parent.prepend(el);return el}
+let selected=null;
+function publish(title,rows,source,selector){
+ const list=Array.from(rows||[]),notes=new Set(list.map(r=>String(r.nota??r.PROTOCOLO??r['ID SISCO']??'').trim()).filter(Boolean));
+ selected={title,rows:list,notes,source};
+ const target=get('nipCrossSelection');if(target){target.hidden=false;target.querySelector('[data-title]').textContent=title;target.querySelector('[data-count]').textContent=notes.size.toLocaleString('pt-BR')+' notas selecionadas';}
+ if(selector){showSubset(selector,title,list,source)}
+ return selected;
+}
+function showSubset(node,title,list,source){
+ const out=box('nipCrossCardDetail','Obras selecionadas — '+title,node);
+ const total=list.length;out.querySelector('[data-info]').textContent=total.toLocaleString('pt-BR')+' linhas encontradas. Exibindo até 250; o recorte completo será aplicado ao relatório quando houver correspondência de nota.';
+ const cols=source==='notas'?['PROTOCOLO','LEVANTADOR','MUNICIPIO','STATUS LIST','STATUS SAP','DATA DESPACHO']:['nota','levantador','municipio','analista','q','u','correcao'];
+ out.querySelector('[data-head]').innerHTML='<tr>'+cols.map(c=>'<th>'+html(c)+'</th>').join('')+'</tr>';
+ out.querySelector('[data-body]').innerHTML=list.slice(0,250).map(r=>'<tr>'+cols.map(c=>'<td>'+html(r[c]??'—')+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="7">Nenhum registro nesta seleção.</td></tr>';
+ out.querySelector('[data-report]').onclick=()=>openReports();out.querySelector('[data-clear]').onclick=()=>{selected=null;out.remove();clearReport()};out.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function clearReport(){window.nipReportBridge=null;selected=null;get('nipCrossCardDetail')?.remove();window.nipRefreshReports?.();const x=get('nipCrossSelection');if(x)x.hidden=true;const y=get('nipReportCrossBanner');if(y)y.hidden=true;}
+function openReports(){if(!selected){alert('Selecione primeiro um grupo de obras.');return}
+ const available=new Set();(window.DATA||DATA||[]).forEach(r=>{const a=String(r.PROTOCOLO??'').trim(),b=String(r['ID SISCO']??'').trim();if(a)available.add(a);if(b)available.add(b)});
+ const matched=[...selected.notes].filter(n=>available.has(n));const unmatched=selected.notes.size-matched.length;
+ window.nipReportBridge={title:selected.title,notes:new Set(matched),total:selected.notes.size,unmatched};
+ window.nipOpenReportTab?.();if(!window.nipOpenReportTab){showTab('nip-tab-relatorios');window.nipRefreshReports?.()}
+ const banner=get('nipReportCrossBanner');if(banner){banner.hidden=false;banner.querySelector('[data-title]').textContent=selected.title;banner.querySelector('[data-stats]').textContent=`${matched.length.toLocaleString('pt-BR')} notas encontradas na base de Relatórios; ${unmatched.toLocaleString('pt-BR')} sem correspondência. Os demais filtros globais e os filtros próprios do relatório continuam sendo aplicados.`;}
+}
+// Workload metrics: use exactly the existing workload eligibility and grouping rules.
+const workload=get('workload');if(workload){
+ const cards=[['wlTotal','Total elegível',r=>!!staffLoadStatus(r)],['wlZero','LIST 0',r=>!!staffLoadStatus(r)&&workloadStatus(r)==='zero'],['wlCorr','Correção de levantamento',r=>!!staffLoadStatus(r)&&workloadStatus(r)==='corr'],['wlAndamento','Em levantamento',r=>!!staffLoadStatus(r)&&workloadStatus(r)==='andamento'],['wlLow','Recarregar demanda',null],['wlOk','Carga entre 10 e 50',null],['wlHigh','Verificar acúmulo',null],['wlUnassigned','Obras sem levantador',r=>!!staffLoadStatus(r)&&isNoStaff(r)]];
+ function subset(kind,predicate){let all=CURRENT.filter(r=>!!staffLoadStatus(r));if(predicate)return CURRENT.filter(predicate);const counts=new Map();for(const r of all){const n=String(r.LEVANTADOR??'').trim()||'SEM LEVANTADOR';counts.set(n,(counts.get(n)||0)+1)}const test=n=>{const v=counts.get(n)||0;return kind==='wlLow'?v>0&&v<10:kind==='wlOk'?v>=10&&v<=50:v>50};return all.filter(r=>!isNoStaff(r)&&test(String(r.LEVANTADOR??'').trim()))}
+ for(const [id,label,pred] of cards){const v=get(id);if(!v)continue;const element=v.closest('.workload-card,.wl-card,.kpi,.metric,.nip-metric')||v.parentElement;element.classList.add('nip-link-card');element.tabIndex=0;element.setAttribute('role','button');element.setAttribute('aria-label','Ver obras: '+label);const click=()=>publish(label,subset(id,pred),'notas',workload);element.addEventListener('click',click);element.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();click()}})}
+}
+// Cross-navigation uses current source selections; no changes to original calculation.
+function listQuality(){let a=window.nipAdvancedSourceRows||[];if(a.length){const staff=get('qlStaff')?.value||'',analyst=get('qlAnalystSelect')?.value||'',onlyMissing=get('qlOnlyMissing')?.checked||false;return a.filter(r=>r.correcao&&(!staff||r.levantador===staff)&&(!analyst||r.analista===analyst)&&(!onlyMissing||!r.obs));}return (window.nipQualitySourceRows||[]).map(r=>({...r,municipio:'',q:'',u:'',correcao:true})).filter(r=>(!get('qlStaff')?.value||r.levantador===get('qlStaff').value));}
+function prodRows(){const rows=window.nipProductionSourceRows||[];const base=get('pdBase')?.value||'q',d=get('pdDate')?.value||'',mode=get('pdPeriod')?.value||'day',staff=get('pdStaff')?.value||'';const dateOf=r=>base==='q'?r.data_levantamento:r.data;const week=x=>{const z=new Date(x+'T12:00:00Z');z.setUTCDate(z.getUTCDate()-(z.getUTCDay()+6)%7);return z.toISOString().slice(0,10)};const key=x=>mode==='month'?x.slice(0,7):mode==='week'?week(x):x;return rows.filter(r=>{const v=dateOf(r);return /^\d{4}-\d{2}-\d{2}$/.test(v||'')&&d&&key(v)===key(d)&&(!staff||r.levantador===staff)});}
+function installButton(panelId,title,getRows,source){const panel=get(panelId);if(!panel)return;let target=get(panelId+'CrossTools');if(target)return;target=document.createElement('div');target.id=panelId+'CrossTools';target.className='nip-cross-box';target.innerHTML='<h3>Integração entre abas</h3><p class="nip-cross-note">Envie o conjunto selecionado para Relatórios, mantendo os filtros existentes. Quando uma nota não existir na base de Relatórios, ela será sinalizada.</p><div class="nip-cross-bar"><button type="button" data-open>Consultar estas obras em RELATÓRIOS →</button><button type="button" class="secondary" data-other>Ver obras selecionadas aqui</button><button type="button" class="secondary" data-quality>Ir para Qualidade</button><button type="button" class="secondary" data-production>Ir para Produtividade</button><button type="button" class="secondary" data-deadlines>Ir para Prazos</button></div>';panel.prepend(target);target.querySelector('[data-open]').onclick=()=>{publish(title(),getRows(),source);openReports()};target.querySelector('[data-other]').onclick=()=>publish(title(),getRows(),source,panel);const transfer=(dest,selectId)=>{const staff=get('pdStaff')?.value||get('qlStaff')?.value||'';if(staff&&selectId){const input=get(selectId);if(input&&[...input.options].some(o=>o.value===staff)){input.value=staff;input.dispatchEvent(new Event('change',{bubbles:true}))}}showTab(dest)};target.querySelector('[data-quality]').onclick=()=>transfer('nip-tab-qualidade-list','qlStaff');target.querySelector('[data-production]').onclick=()=>transfer('nip-tab-produtividade','pdStaff');target.querySelector('[data-deadlines]').onclick=()=>showTab('nip-tab-prazos')}
+installButton('nip-tab-qualidade-list',()=> 'Correções · '+(get('qlStaff')?.value||'Todos os levantadores'),listQuality,'list');
+installButton('nip-tab-produtividade',()=> 'Produtividade '+(get('pdBase')?.value==='q'?'campo (Q)':'análise (U)')+' · '+(get('pdDate')?.value||''),prodRows,'list');
+installButton('nip-tab-prazos',()=> 'Prazos e prioridades · período selecionado',()=>{const range=get('nipAgeSelect')?.value||'',soon=get('nipSoon')?.value||'';return CURRENT.filter(r=>{if(!workloadStatus(r))return false;const date=agParse(r['DATA DESPACHO']),days=date===null?null:agDays(date);const group=days===null?'nodate':days<=5?'0-5':days<=10?'6-10':days<=15?'11-15':days<=30?'16-30':'31+';return (!range||range===group)&&(!soon||(days!==null&&days>=0&&days<=10&&days>=10-Number(soon)))});},'notas');
+const report=get('nip-tab-relatorios');if(report){let banner=document.createElement('div');banner.id='nipReportCrossBanner';banner.className='nip-cross-box';banner.hidden=true;banner.innerHTML='<h3>Recorte recebido: <span data-title></span></h3><p class="nip-cross-note" data-stats></p><div class="nip-cross-bar"><button type="button" data-clear>Remover recorte entre abas</button><button type="button" class="secondary" data-back>Voltar à aba de origem</button></div>';report.prepend(banner);banner.querySelector('[data-clear]').onclick=()=>{clearReport()};banner.querySelector('[data-back]').onclick=()=>{if(selected?.source==='notas')showTab('nip-tab-prazos');else showTab(selected?.title?.startsWith('Produtividade')?'nip-tab-produtividade':'nip-tab-qualidade-list')}}
+window.nipCrossBridge={publish,openReports,clearReport,prodRows,listQuality};
 })();
 </script>
 </body></html>

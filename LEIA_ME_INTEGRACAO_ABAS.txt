@@ -1,0 +1,30 @@
+DASHBOARD NIP - CARDS CLICAVEIS E INTEGRACAO ENTRE ABAS
+
+Arquivos para publicacao na raiz do repositorio:
+- nip_dashboard_template.html (SUBSTITUIR)
+- app_nip.py (MANTER/SUBSTITUIR SOMENTE SE NECESSARIO)
+- nip_analytics.py (MANTER, necessario para os indicadores avancados)
+- requirements.txt (MANTER)
+
+Alteracoes:
+1. Oito indicadores da aba LEVANTADORES passam a abrir uma tabela detalhada ao clicar ou pressionar Enter/Espaco.
+   - Total elegivel, LIST 0, Correcao, Em levantamento, 1-9 obras, 10-50 obras, 51+ obras, Sem levantador.
+   - As regras existentes de elegibilidade e de coluna M continuam valendo.
+2. Prazos e prioridades, Qualidade Levantamento e Produtividade recebem acoes para:
+   - Visualizar os registros do recorte atual.
+   - Encaminhar notas selecionadas para RELATORIOS.
+   - Navegar entre essas abas e preservar a selecao de levantador quando possivel.
+3. RELATORIOS recebe filtro adicional por conjunto de notas identificado nas outras abas.
+   - Tabela, previa, resumo e exportacoes existentes obedecem ao conjunto recebido E aos filtros globais e internos que estiverem ativos.
+   - O quadro informa quantas notas foram encontradas na base oficial e quantas nao puderam ser correspondidas.
+   - Botao para remover apenas o recorte entre abas, sem apagar os filtros preexistentes.
+4. Sem mudancas em Python, integracao de dados, bases ou indicadores anteriores.
+
+LIMITACOES:
+- A correspondencia entre BASE_LIST e NOTAS e feita pelos numeros da nota/PROTOCOLO ou ID SISCO.
+- Notas sem correspondencia nao sao inventadas ou adicionadas a RELATORIOS.
+- O relatorio e uma interseccao dos filtros atuais e do recorte, nao substitui filtros existentes.
+- Conferencia visual no Streamlit publicado ainda e recomendada.
+
+Teste: python test_integracao_abas.py
+Testes anteriores: python test_nip_regression.py; python test_analytics_nip.py; python test_correcao_data_produtividade.py
