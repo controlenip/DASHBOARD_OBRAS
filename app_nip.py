@@ -18,6 +18,7 @@ from datetime import datetime
 import pandas as pd
 import requests
 import streamlit as st
+from nip_analytics import build_payload
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title='NIP | Dashboard de Obras', page_icon='🗺️', layout='wide', initial_sidebar_state='collapsed')
@@ -361,10 +362,12 @@ def main():
         list_payload='[]'
         productivity_payload='[]'
         productivity_status='BASE_LIST.xlsx não encontrada.'
+        analytics_payload='null'
         list_status='BASE_LIST.xlsx não encontrada; adicione-a à raiz do GitHub.'
         try:
             list_blob,list_source=get_shared_list()
             if list_blob is not None:
+                analytics_payload=build_payload(list_blob)
                 list_payload,all_list_rows,quality_rows=parse_list_quality(list_blob)
                 productivity_payload,prod_total,prod_count=parse_list_productivity(list_blob)
                 productivity_status=f'{list_source} · {prod_total:,} registros · {prod_count:,} com data em U'.replace(',','.')
@@ -385,6 +388,10 @@ def main():
         safe_productivity=(productivity_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026'))
         html=html.replace('__NIP_PRODUCTIVITY_PAYLOAD__',safe_productivity)
         html=html.replace('__NIP_PRODUCTIVITY_STATUS__',json.dumps(productivity_status,ensure_ascii=False))
+        if template.count('__NIP_ANALYTICS_PAYLOAD__')!=1:
+            raise ValueError('Marcador da analise integrada ausente ou duplicado.')
+        safe_analytics=analytics_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
+        html=html.replace('__NIP_ANALYTICS_PAYLOAD__',safe_analytics)
         html=html.replace('Base incorporada •',source+' •')
         st.session_state['nip_loaded_count']=count
         # The iframe is viewport-height, not a fixed 1100px. This prevents the
