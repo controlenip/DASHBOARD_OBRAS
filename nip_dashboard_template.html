@@ -132,17 +132,24 @@ let z=rows.reduce((a,r)=>a+r.zero,0),c=rows.reduce((a,r)=>a+r.corr,0),a=rows.red
 $('wlFoot').innerHTML=`<tr><td>Total exibido</td><td>${nf(z)}</td><td>${nf(c)}</td><td>${nf(a)}</td><td>${nf(z+c+a)}</td><td></td></tr>`
 }
 $('wlIgnoreM').addEventListener('change',()=>{renderWorkload();renderAging();if(typeof nipOpsRefresh==='function')nipOpsRefresh()});$('wlSearch').addEventListener('input',drawWorkload);$('wlBody').addEventListener('click',e=>{let tr=e.target.closest('tr[data-name]');if(!tr)return;let s=sel['LEVANTADOR'];if(s){multiSet(s,[tr.dataset.name]);document.getElementById('map').scrollIntoView({behavior:'smooth',block:'nearest'})}});
+// O mapa abre no Maranhao, mas a navegacao posterior e livre.
+// Reenquadrar somente quando o conjunto de filtros realmente mudar.
+let nipLastViewportFilterKey=null;
 function adjustMapToFiltered(points){
- const hasFilters=Object.values(sel).some(s=>multiValues(s).length>0)||['q','from','to'].some(id=>$(id).value)||$('noCoord').checked||$('noName').checked;
+ const filterParts=Object.entries(sel).map(([k,v])=>[k,multiValues(v).slice().sort()]);
+ const otherFilters=['q','from','to'].map(id=>$(id).value);
+ otherFilters.push($('noCoord').checked,$('noName').checked);
+ const key=JSON.stringify([filterParts,otherFilters]);
+ const hasFilters=filterParts.some(([,v])=>v.length>0)||otherFilters.some(Boolean);
  const note=$('mapzoomnote');
- if(hasFilters&&points.length){
-  if(points.length===1)map.setView(points[0],Math.min(13,map.getMaxZoom()),{animate:false});
-  else map.fitBounds(L.latLngBounds(points),{padding:[44,44],maxZoom:13,animate:false});
-  note.textContent=`Enquadramento automático: ${points.length.toLocaleString('pt-BR')} obra(s) com coordenadas válidas nos filtros selecionados. Navegação livre no mapa.`;
- }else{
-  map.setView(MARANHAO_CENTER,7,{animate:false});
-  note.textContent=hasFilters?'Nenhuma obra com coordenadas válidas para os filtros atuais. Mapa livre para navegar.':'Visão inicial do Maranhão. Você pode navegar livremente para outras regiões.';
+ if(key!==nipLastViewportFilterKey){
+  nipLastViewportFilterKey=key;
+  if(hasFilters&&points.length){
+   if(points.length===1)map.setView(points[0],Math.min(13,map.getMaxZoom()),{animate:false});
+   else map.fitBounds(L.latLngBounds(points),{padding:[44,44],maxZoom:13,animate:false});
+  }
  }
+ note.textContent=hasFilters?(points.length?`Filtros aplicados: ${points.length.toLocaleString('pt-BR')} obra(s) com coordenadas. Navegação livre no mapa.`:'Sem coordenadas nos filtros atuais. Navegação livre no mapa.'):'Navegação livre no mapa. Vista inicial no Maranhão, sem limite de navegação.';
  setTimeout(()=>map.invalidateSize(),80);
 }
 
