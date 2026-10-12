@@ -792,4 +792,54 @@ btn.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(
 nav.addEventListener('click',e=>{if(!e.target.closest('button[data-tab]'))return;panel.classList.add('nip-hidden');btn.classList.remove('selected')});
 })();
 </script>
+<style>
+#nip-tab-produtividade .pd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:12px 0}
+#nip-tab-produtividade .pd-card{padding:16px;border-radius:12px;background:#eff6fb;border:1px solid #d7e5ef}
+#nip-tab-produtividade .pd-card small{display:block;color:#52697b}#nip-tab-produtividade .pd-card strong{font-size:25px;color:#123653}
+#nip-tab-produtividade .pd-controls{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:12px 0}
+#nip-tab-produtividade select,#nip-tab-produtividade input{padding:9px;border:1px solid #b3c5d4;border-radius:7px;background:white}
+#nip-tab-produtividade .pd-scroll{overflow:auto;max-height:510px}
+#nip-tab-produtividade table{width:100%;border-collapse:collapse;font-size:13px}#nip-tab-produtividade th,#nip-tab-produtividade td{padding:9px;border-bottom:1px solid #e0e7ed;text-align:left}#nip-tab-produtividade th{position:sticky;top:0;background:#e9f1f7}
+#nip-tab-produtividade .pd-note{font-size:12px;color:#536a7a;line-height:1.5}
+</style>
+<script>
+(function(){'use strict';
+const rows=__NIP_PRODUCTIVITY_PAYLOAD__,source=__NIP_PRODUCTIVITY_STATUS__;
+const nav=document.getElementById('nipNav'),main=document.querySelector('main');if(!nav||!main)return;
+const b=document.createElement('button');b.type='button';b.textContent='Produtividade';b.dataset.productivity='1';nav.append(b);
+const panel=document.createElement('div');panel.id='nip-tab-produtividade';panel.className='nip-tab nip-hidden';main.append(panel);
+panel.innerHTML=`<section class="nip-box"><h2>PRODUTIVIDADE — Levantamentos analisados</h2><p class="pd-note" id="pdSource"></p><div class="pd-controls"><label>Período <select id="pdPeriod"><option value="day">Diário</option><option value="week">Semanal</option><option value="month">Mensal</option></select></label><label>Referência <input id="pdDate" type="date"></label><label>Levantador <select id="pdStaff"></select></label><button id="pdLatest" type="button">Última data disponível</button></div><div class="pd-grid" id="pdMetrics"></div><p class="pd-note">Contabiliza somente registros com data válida na coluna U (Data da análise de levantamento). A data Q (levantamento) é informativa. Uma linha representa uma obra; notas repetidas na BASE_LIST são sinalizadas para conferência, sem exclusão automática. Postes existentes (R) e novos (S) são mostrados separadamente.</p></section>
+<section class="nip-box"><h2 id="pdTopTitle">Top 10 — Produtividade</h2><div class="pd-scroll"><table><thead><tr><th>Posição</th><th>Levantador (O)</th><th>Obras</th><th>Postes novos (S)</th><th>Postes existentes (R)</th></tr></thead><tbody id="pdTop"></tbody></table></div></section>
+<section class="nip-box"><h2>Top 10 municípios com obras atendidas</h2><div class="pd-scroll"><table><thead><tr><th>Posição</th><th>Município (H)</th><th>Obras</th><th>Postes novos</th></tr></thead><tbody id="pdCities"></tbody></table></div></section>
+<section class="nip-box"><h2>Análise preditiva — Tendência indicativa</h2><div class="pd-grid" id="pdPredict"></div><p class="pd-note">Projeção simples baseada na média diária de obras e postes novos dos últimos 28 dias corridos disponíveis até a referência, projetada para os próximos 7 e 30 dias. Não é meta, previsão contratual nem garantia de execução. Dias sem registros são considerados zero; períodos com menos de 7 dias de histórico não geram previsão.</p></section>
+<section class="nip-box"><h2>Detalhamento e conferência</h2><p class="pd-note" id="pdDetailInfo"></p><div class="pd-scroll"><table><thead><tr><th>Linha</th><th>Nota</th><th>Levantador</th><th>Município</th><th>Data Q</th><th>Data U</th><th>Postes existentes</th><th>Postes novos</th></tr></thead><tbody id="pdDetail"></tbody></table></div><button type="button" id="pdCsv">Exportar CSV do período selecionado</button></section>`;
+const el=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fmt=n=>Number(n||0).toLocaleString('pt-BR');
+const valid=rows.filter(r=>/^\d{4}-\d{2}-\d{2}$/.test(r.data));
+const latest=valid.reduce((m,r)=>r.data>m?r.data:m,'');el('pdSource').textContent=source;el('pdDate').value=latest;
+const staff=[...new Set(valid.map(r=>r.levantador))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+el('pdStaff').innerHTML='<option value="">Todos os levantadores</option>'+staff.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+function utc(d){return new Date(d+'T12:00:00Z')}
+function weekStart(d){let x=utc(d);x.setUTCDate(x.getUTCDate()-(x.getUTCDay()+6)%7);return x.toISOString().slice(0,10)}
+function periodKey(d,mode){return mode==='month'?d.slice(0,7):mode==='week'?weekStart(d):d}
+function aggregate(list,key){let map=new Map();for(const r of list){let k=r[key],a=map.get(k)||{name:k,obras:0,novos:0,existentes:0};a.obras++;a.novos+=r.postes_novos;a.existentes+=r.postes_existentes;map.set(k,a)}return [...map.values()].sort((a,b)=>b.obras-a.obras||b.novos-a.novos||String(a.name).localeCompare(String(b.name),'pt-BR')).slice(0,10)}
+function card(label,value){return `<div class="pd-card"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`}
+function current(){const mode=el('pdPeriod').value,day=el('pdDate').value,staff=el('pdStaff').value,key=periodKey(day,mode);return valid.filter(r=>periodKey(r.data,mode)===key&&(!staff||r.levantador===staff))}
+function refresh(){const mode=el('pdPeriod').value,day=el('pdDate').value;if(!day)return;const list=current(),label=mode==='day'?'diária':mode==='week'?'semanal':'mensal';
+el('pdTopTitle').textContent=`Top 10 — Produtividade ${label}`;
+const newPosts=list.reduce((a,r)=>a+r.postes_novos,0),oldPosts=list.reduce((a,r)=>a+r.postes_existentes,0),unique=new Set(list.map(r=>r.nota).filter(Boolean));
+el('pdMetrics').innerHTML=card('Obras com data U no período',fmt(list.length))+card('Postes novos levantados (S)',fmt(newPosts))+card('Postes existentes levantados (R)',fmt(oldPosts))+card('Levantadores no período',fmt(new Set(list.map(r=>r.levantador)).size))+card('Notas repetidas no recorte',fmt(list.filter(r=>r.nota).length-unique.size));
+el('pdTop').innerHTML=aggregate(list,'levantador').map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.name)}</td><td>${fmt(a.obras)}</td><td>${fmt(a.novos)}</td><td>${fmt(a.existentes)}</td></tr>`).join('')||'<tr><td colspan="5">Sem registros no período.</td></tr>';
+el('pdCities').innerHTML=aggregate(list,'municipio').map((a,i)=>`<tr><td>${i+1}</td><td>${esc(a.name)}</td><td>${fmt(a.obras)}</td><td>${fmt(a.novos)}</td></tr>`).join('')||'<tr><td colspan="4">Sem registros no período.</td></tr>';
+const selectedStaff=el('pdStaff').value,cutoff=utc(day);cutoff.setUTCDate(cutoff.getUTCDate()-27);const first=cutoff.toISOString().slice(0,10);
+const historical=valid.filter(r=>r.data>=first&&r.data<=day&&(!selectedStaff||r.levantador===selectedStaff));const minDate=historical.reduce((m,r)=>r.data<m?r.data:m,day);const span=Math.floor((utc(day)-utc(minDate))/86400000)+1;
+const sufficient=historical.length>0&&span>=7;const avg=sufficient?historical.length/28:0,avgPosts=sufficient?historical.reduce((a,r)=>a+r.postes_novos,0)/28:0;
+el('pdPredict').innerHTML=sufficient?card('Obras estimadas / próximos 7 dias',fmt(Math.round(avg*7)))+card('Postes novos / próximos 7 dias',fmt(Math.round(avgPosts*7)))+card('Obras estimadas / próximos 30 dias',fmt(Math.round(avg*30)))+card('Postes novos / próximos 30 dias',fmt(Math.round(avgPosts*30))):card('Projeção','Histórico insuficiente');
+el('pdDetailInfo').textContent=`${fmt(list.length)} registros; exibindo os primeiros ${fmt(Math.min(300,list.length))}. A exportação inclui todos.`;
+el('pdDetail').innerHTML=list.slice(0,300).map(r=>`<tr><td>${r.linha}</td><td>${esc(r.nota)}</td><td>${esc(r.levantador)}</td><td>${esc(r.municipio)}</td><td>${esc(r.data_levantamento)}</td><td>${esc(r.data)}</td><td>${fmt(r.postes_existentes)}</td><td>${fmt(r.postes_novos)}</td></tr>`).join('')||'<tr><td colspan="8">Nenhuma obra encontrada.</td></tr>';
+}
+for(const id of ['pdPeriod','pdDate','pdStaff'])el(id).addEventListener('change',refresh);el('pdLatest').addEventListener('click',()=>{el('pdDate').value=latest;refresh()});
+el('pdCsv').addEventListener('click',()=>{const fields=['linha','nota','levantador','municipio','data_levantamento','data','postes_existentes','postes_novos'];const csv=[fields.join(';'),...current().map(r=>fields.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(';'))].join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nip_produtividade.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+b.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(x=>x.classList.add('nip-hidden'));panel.classList.remove('nip-hidden');nav.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected')});nav.addEventListener('click',e=>{if(e.target.closest('button[data-tab],button[data-quality-list]')){panel.classList.add('nip-hidden');b.classList.remove('selected')}});refresh();
+})();
+</script>
 </body></html>

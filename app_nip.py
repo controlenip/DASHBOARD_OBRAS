@@ -185,6 +185,44 @@ def parse_list_quality(blob:bytes):
         result.append({'linha':int(ix)+2,'nota':nota,'levantador':levantador or '(Sem levantador)', 'analista':analista or '(Sem analista informado)', 'observacoes':obs})
     return json.dumps(result,ensure_ascii=False),len(raw),len(result)
 
+@st.cache_data(show_spinner=False,max_entries=4)
+def parse_list_productivity(blob:bytes):
+    """BASE_LIST: H municipio, O levantador, Q data levantamento, R/S postes, U data analise.
+    Only dated U rows are completed; Q is retained as field evidence, not used as completion.
+    """
+    import unicodedata
+    df=pd.read_excel(io.BytesIO(blob),sheet_name=0,engine='openpyxl',dtype=object)
+    if df.shape[1]<21:raise ValueError('BASE_LIST precisa conter as colunas H, O, Q, R, S e U.')
+    def norm(v):
+        return ''.join(c for c in unicodedata.normalize('NFKD',str(v or '')) if not unicodedata.combining(c)).upper().strip()
+    expected={7:'MUNICIPIO',14:'LEVANTADOR',16:'DATA DO LEVANTAMENTO',17:'QNT. POSTES LEVANTADOS',18:'P L N',20:'DATA DA ANALISE DE LEVANTAMENTO'}
+    invalid=[f'{i+1}: {df.columns[i]}' for i,v in expected.items() if v not in norm(df.columns[i])]
+    if invalid:raise ValueError('Cabeçalhos inesperados na BASE_LIST: '+', '.join(invalid))
+    def date(v):
+        if pd.isna(v):return ''
+        try:
+            d=pd.to_datetime(v,errors='coerce',dayfirst=True)
+            if pd.isna(d) or d.year<2000 or d.year>2100:return ''
+            return d.strftime('%Y-%m-%d')
+        except Exception:return ''
+    def number(v):
+        if pd.isna(v) or str(v).strip()=='':return 0
+        try:
+            n=float(str(v).replace(' ','').replace(',','.'))
+            return int(n) if n>=0 and n.is_integer() and n<=100000 else 0
+        except Exception:return 0
+    result=[]
+    for ix,row in df.iterrows():
+        u=date(row.iloc[20]);q=date(row.iloc[16]);
+        if not u:continue
+        staff=str(row.iloc[14]).strip() if pd.notna(row.iloc[14]) else ''
+        town=str(row.iloc[7]).strip() if pd.notna(row.iloc[7]) else ''
+        note=str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ''
+        result.append({'linha':int(ix)+2,'nota':note,'municipio':town or '(Sem município)',
+            'levantador':staff or '(Sem levantador)','data':u,'data_levantamento':q,
+            'postes_existentes':number(row.iloc[17]),'postes_novos':number(row.iloc[18])})
+    return json.dumps(result,ensure_ascii=False),len(df),len(result)
+
 def validate_workbook(blob:bytes):
     """Validation is read-only and never changes spreadsheet data."""
     issues=[]
@@ -321,22 +359,32 @@ def main():
                  .replace('&','\\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
         html=template.replace('__NIP_DATA_PAYLOAD__',payload)
         list_payload='[]'
+        productivity_payload='[]'
+        productivity_status='BASE_LIST.xlsx não encontrada.'
         list_status='BASE_LIST.xlsx não encontrada; adicione-a à raiz do GitHub.'
         try:
             list_blob,list_source=get_shared_list()
             if list_blob is not None:
                 list_payload,all_list_rows,quality_rows=parse_list_quality(list_blob)
+                productivity_payload,prod_total,prod_count=parse_list_productivity(list_blob)
+                productivity_status=f'{list_source} · {prod_total:,} registros · {prod_count:,} com data em U'.replace(',','.')
                 list_status=f'{list_source} · {all_list_rows:,} registros · {quality_rows:,} em correção'.replace(',','.')
             else:
                 list_status=list_source
         except Exception as exc:
             list_status='BASE_LIST indisponível: '+str(exc)
+            productivity_status=list_status
         if template.count('__NIP_LIST_PAYLOAD__')!=1 or template.count('__NIP_LIST_STATUS__')!=1:
             raise ValueError('Template de qualidade inválido: marcador BASE_LIST ausente ou duplicado.')
         safe_list=(list_payload.replace('<','\\u003c').replace('>','\\u003e')
                    .replace('&','\\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
         html=html.replace('__NIP_LIST_PAYLOAD__',safe_list)
         html=html.replace('__NIP_LIST_STATUS__',json.dumps(list_status,ensure_ascii=False))
+        if template.count('__NIP_PRODUCTIVITY_PAYLOAD__')!=1 or template.count('__NIP_PRODUCTIVITY_STATUS__')!=1:
+            raise ValueError('Template de produtividade inválido: marcador ausente ou duplicado.')
+        safe_productivity=(productivity_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026'))
+        html=html.replace('__NIP_PRODUCTIVITY_PAYLOAD__',safe_productivity)
+        html=html.replace('__NIP_PRODUCTIVITY_STATUS__',json.dumps(productivity_status,ensure_ascii=False))
         html=html.replace('Base incorporada •',source+' •')
         st.session_state['nip_loaded_count']=count
         # The iframe is viewport-height, not a fixed 1100px. This prevents the
