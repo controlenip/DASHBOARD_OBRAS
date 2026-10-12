@@ -102,12 +102,12 @@ def get_remote_file(ref=None, filename=None):
 def get_shared_base():
     try:
         data=get_remote_file()
-        if data:return data,'Base compartilhada · GitHub'
+        if data:return data,'Dados atualizados'
     except Exception:
         pass
     local=ROOT/EXCEL_NAME
-    if local.exists():return local.read_bytes(),'Cópia inicial do repositório — pode estar desatualizada'
-    raise FileNotFoundError('A planilha não foi encontrada. Adicione '+EXCEL_NAME+' ao repositório.')
+    if local.exists():return local.read_bytes(),'Dados disponíveis'
+    raise FileNotFoundError('Dados operacionais indisponíveis no momento.')
 
 @st.cache_data(show_spinner=False,max_entries=4)
 def parse_notas(blob:bytes):
@@ -151,13 +151,13 @@ def get_shared_list():
     try:
         remote=get_remote_file(filename=LIST_NAME)
         if remote is not None:
-            return remote, 'BASE_LIST.xlsx · GitHub'
+            return remote, 'Dados atualizados'
     except Exception:
         pass
     local=ROOT/LIST_NAME
     if local.exists():
-        return local.read_bytes(), 'BASE_LIST.xlsx · cópia local (verifique a versão no GitHub)'
-    return None, 'BASE_LIST.xlsx não encontrada no repositório'
+        return local.read_bytes(), 'Dados disponíveis'
+    return None, 'Dados de qualidade e produtividade indisponíveis no momento.'
 
 @st.cache_data(show_spinner=False,max_entries=4)
 def parse_list_quality(blob:bytes):
@@ -189,7 +189,7 @@ def parse_list_quality(blob:bytes):
 @st.cache_data(show_spinner=False,max_entries=4)
 def parse_list_productivity(blob:bytes):
     """BASE_LIST: H municipio, O levantador, Q data levantamento, R/S postes, U data analise.
-    Only dated U rows are completed; Q is retained as field evidence, not used as completion.
+    Preserve rows with Q or U; production in field is keyed to Q, analyses to U.
     """
     import unicodedata
     df=pd.read_excel(io.BytesIO(blob),sheet_name=0,engine='openpyxl',dtype=object)
@@ -215,7 +215,7 @@ def parse_list_productivity(blob:bytes):
     result=[]
     for ix,row in df.iterrows():
         u=date(row.iloc[20]);q=date(row.iloc[16]);
-        if not u:continue
+        if not (q or u):continue
         staff=str(row.iloc[14]).strip() if pd.notna(row.iloc[14]) else ''
         town=str(row.iloc[7]).strip() if pd.notna(row.iloc[7]) else ''
         note=str(row.iloc[0]).strip() if pd.notna(row.iloc[0]) else ''
@@ -288,9 +288,9 @@ def publish(blob:bytes, actor:str):
     try:
         github_put('nip_publicacao_atual.json',json.dumps(audit,ensure_ascii=False,indent=2).encode('utf-8'),
                    'NIP: auditoria de publicação da base')
-        st.session_state['nip_audit_status']='Registro de auditoria publicado no GitHub.'
+        st.session_state['nip_audit_status']='Registro de auditoria salvo com sucesso.'
     except Exception:
-        st.session_state['nip_audit_status']='A planilha foi publicada, mas o registro de auditoria falhou. Verifique permissões do GitHub.'
+        st.session_state['nip_audit_status']='A atualização foi concluída, mas o registro de auditoria não pôde ser confirmado.'
     get_shared_base.clear()
     parse_notas.clear()
     return count
@@ -342,8 +342,8 @@ def admin_sidebar():
                 st.success(f'{n:,} obras publicadas. Todos verão a nova versão ao atualizar a página.'.replace(',','.'))
                 st.info(st.session_state.get('nip_audit_status',''))
                 st.rerun()
-            except Exception as e:st.error(str(e))
-        if not GITHUB_TOKEN:st.info('Para persistir atualizações para todos, configure GITHUB_TOKEN nos Secrets.')
+            except Exception as e:st.error('A atualização não pôde ser concluída. Verifique as permissões com o administrador.')
+        if not GITHUB_TOKEN:st.info('A publicação compartilhada está indisponível. Solicite a configuração ao administrador do sistema.')
 
 
 def main():
@@ -361,21 +361,21 @@ def main():
         html=template.replace('__NIP_DATA_PAYLOAD__',payload)
         list_payload='[]'
         productivity_payload='[]'
-        productivity_status='BASE_LIST.xlsx não encontrada.'
+        productivity_status='Dados de produtividade indisponíveis no momento.'
         analytics_payload='null'
-        list_status='BASE_LIST.xlsx não encontrada; adicione-a à raiz do GitHub.'
+        list_status='Dados de qualidade indisponíveis no momento.'
         try:
             list_blob,list_source=get_shared_list()
             if list_blob is not None:
                 analytics_payload=build_payload(list_blob)
                 list_payload,all_list_rows,quality_rows=parse_list_quality(list_blob)
                 productivity_payload,prod_total,prod_count=parse_list_productivity(list_blob)
-                productivity_status=f'{list_source} · {prod_total:,} registros · {prod_count:,} com data em U'.replace(',','.')
-                list_status=f'{list_source} · {all_list_rows:,} registros · {quality_rows:,} em correção'.replace(',','.')
+                productivity_status=f'{prod_total:,} registros · {prod_count:,} com data Q ou U'.replace(',','.')
+                list_status=f'{all_list_rows:,} registros · {quality_rows:,} em correção'.replace(',','.')
             else:
-                list_status=list_source
+                list_status='Dados de qualidade indisponíveis no momento.'
         except Exception as exc:
-            list_status='BASE_LIST indisponível: '+str(exc)
+            list_status='Dados de qualidade indisponíveis no momento.'
             productivity_status=list_status
         if template.count('__NIP_LIST_PAYLOAD__')!=1 or template.count('__NIP_LIST_STATUS__')!=1:
             raise ValueError('Template de qualidade inválido: marcador BASE_LIST ausente ou duplicado.')
@@ -392,15 +392,15 @@ def main():
             raise ValueError('Marcador da analise integrada ausente ou duplicado.')
         safe_analytics=analytics_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
         html=html.replace('__NIP_ANALYTICS_PAYLOAD__',safe_analytics)
-        html=html.replace('Base incorporada •',source+' •')
+        html=html.replace('Base incorporada •','')
         st.session_state['nip_loaded_count']=count
         # The iframe is viewport-height, not a fixed 1100px. This prevents the
         # outer Streamlit document from scrolling the embedded header off-screen.
         components.html(html,height=900,scrolling=False)
-        st.caption(f'Fonte: {source} · {count:,} registros · aba NOTAS · revisão automática em até 90 segundos após recarregar a página.'.replace(',','.'))
+        st.caption(f'{count:,} registros disponíveis · atualização automática de indicadores.'.replace(',','.'))
     except Exception as e:
         st.error('Não foi possível carregar o Dashboard NIP.')
-        st.warning(str(e))
-        st.info('Confira se app_nip.py, nip_dashboard_template.html, logo_nip.png e BASE_LEVANTAMENTO_ATUALIZADA.xlsx estão na raiz do repositório.')
+        st.warning('Os dados não puderam ser carregados neste momento.')
+        st.info('Solicite ao administrador que verifique a disponibilidade do sistema.')
 
 if __name__=='__main__':main()
