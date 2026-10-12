@@ -21,7 +21,7 @@ import streamlit as st
 from nip_analytics import build_payload
 import streamlit.components.v1 as components
 
-st.set_page_config(page_title='NIP | Dashboard de Obras', page_icon='🗺️', layout='wide', initial_sidebar_state='collapsed')
+st.set_page_config(page_title='NIP | Dashboard Demanda', page_icon='🗺️', layout='wide', initial_sidebar_state='collapsed')
 ROOT = Path(__file__).resolve().parent
 EXCEL_NAME = 'BASE_LEVANTAMENTO_ATUALIZADA.xlsx'
 TEMPLATE_NAME = 'nip_dashboard_template.html'
