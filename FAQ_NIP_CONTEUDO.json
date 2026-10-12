@@ -1,0 +1,275 @@
+[
+  [
+    "Primeiros passos",
+    "Como começar a usar o dashboard?",
+    "Abra Visão geral para indicadores e mapa; use os filtros de município, regional, status e levantador. Em Levantadores consulte a carga das equipes; em Prazos e prioridades, os vencimentos e atrasos; em Qualidade da base, inconsistências; em Relatórios, tabelas e exportações. As abas Qualidade Levantamento e Produtividade utilizam indicadores complementares da BASE_LIST.",
+    "Visão geral",
+    "inicio navegar usar dashboard menu"
+  ],
+  [
+    "Visão geral",
+    "Como funcionam os filtros da visão geral?",
+    "Os filtros restringem o conjunto apresentado no mapa e nos indicadores vinculados. A seleção pode ser combinada, dependendo de cada controle; use Limpar mapa para restaurar as opções do mapa. Verifique o texto de cada indicador para saber se ele utiliza o conjunto filtrado ou alguma regra operacional adicional.",
+    "Visão geral",
+    "filtros regional municipio status múltiplos"
+  ],
+  [
+    "Visão geral",
+    "Por que nem todas as obras aparecem no mapa?",
+    "Uma nota pode não ter coordenadas válidas, estar fora do limite geográfico ou não corresponder aos filtros ativos. O agrupamento de marcadores pode representar várias obras no mesmo ponto. Compare o total filtrado com as notas sem coordenadas em Qualidade da base.",
+    "Visão geral",
+    "mapa pontos ausentes marcadores coordenadas"
+  ],
+  [
+    "Visão geral",
+    "O que significam as cores dos marcadores?",
+    "As cores distinguem situações operacionais como LIST 0, Em levantamento, Correção de levantamento, Concluído, Análise e registros FINL/CANC. Os marcadores também podem destacar atraso ou prioridade. Consulte a legenda do mapa para interpretar a representação efetivamente ativa.",
+    "Visão geral",
+    "cores legenda pinos status finl canc azul amarelo"
+  ],
+  [
+    "Visão geral",
+    "Como consultar uma nota específica?",
+    "Use a pesquisa por nota, protocolo, ID SISCO ou demais identificadores oferecidos na interface. Os resultados dependem do conjunto carregado e dos filtros ativos. Também é possível pesquisar nas tabelas da aba Relatórios.",
+    "Visão geral",
+    "pesquisa nota sisco protocolo"
+  ],
+  [
+    "Visão geral",
+    "Como limpar o mapa e os filtros?",
+    "Use Limpar mapa nas opções rápidas para remover seleções do mapa. Na aba Relatórios, Limpar tudo remove a pesquisa e filtros próprios da tabela; um comando não necessariamente redefine filtros independentes de outras abas.",
+    "Visão geral",
+    "limpar zerar resetar filtros"
+  ],
+  [
+    "Levantadores",
+    "Como é calculada a carga de obras por levantador?",
+    "A carga segue regras operacionais próprias da base NOTAS, incluindo critérios de STATUS LIST, STATUS SAP e os controles já existentes sobre a coluna M. Os indicadores de carga não devem ser confundidos com produtividade concluída.",
+    "Levantadores",
+    "carga elegibilidade coluna m sap status list"
+  ],
+  [
+    "Levantadores",
+    "O que são Recarregar demanda, Carga entre 10 e 50 e Verificar acúmulo?",
+    "Esses cards agrupam levantadores por faixas de carga operacional: de 1 a 9 obras, de 10 a 50 e de 51 ou mais, respectivamente. Ao clicar, a interface deve abrir a listagem de obras da faixa para consulta e encaminhamento a Relatórios.",
+    "Levantadores",
+    "cards recarregar 1 9 carga 10 50 acúmulo 51 clicaveis"
+  ],
+  [
+    "Levantadores",
+    "Como consultar obras sem levantador?",
+    "Use o card Obras sem levantador na aba Levantadores. Ele mostra a quantidade de obras segundo o critério da aba e permite consultar os registros do grupo. Uma obra sem levantador não equivale automaticamente a serviço atrasado.",
+    "Levantadores",
+    "sem equipe sem levantador"
+  ],
+  [
+    "Levantadores",
+    "Qual é a diferença entre carga e produtividade?",
+    "Carga é o estoque de obras elegíveis/atribuídas sob critérios operacionais da base NOTAS. Produtividade corresponde a registros com datas de levantamento ou análise na BASE_LIST, contabilizados conforme o período e a data de referência selecionados.",
+    "Levantadores",
+    "carga versus produtividade"
+  ],
+  [
+    "Prazos e prioridades",
+    "Como são calculados os atrasos e prioridades?",
+    "A aba usa as datas e estados disponíveis na base operacional, incluindo DATA DESPACHO quando aplicável. Ela permite organizar obras por idade, faixas de prazo e seleção prioritária. A presença de uma data não comprova, por si só, que uma obra foi concluída.",
+    "Prazos e prioridades",
+    "prazo despachos atrasos 10 dias 72 horas"
+  ],
+  [
+    "Prazos e prioridades",
+    "Como enviar obras atrasadas para Relatórios?",
+    "Use os controles de detalhamento/encaminhamento da aba para transportar o recorte de notas selecionadas a Relatórios. O cruzamento entre abas utiliza o identificador de nota; registros sem correspondência na base oficial precisam ser verificados separadamente.",
+    "Prazos e prioridades",
+    "prioridade encaminhar relatorios cruzamento"
+  ],
+  [
+    "Qualidade da base",
+    "O que é verificado na qualidade da base?",
+    "São sinalizadas inconsistências como identificadores repetidos, falta de coordenadas, ausência de levantador e campos relevantes incompletos, conforme os testes disponíveis. A sinalização não altera registros nem corrige automaticamente a planilha de origem.",
+    "Qualidade da base",
+    "inconsistencias duplicados sem coordenadas"
+  ],
+  [
+    "Qualidade da base",
+    "Por que existem notas repetidas?",
+    "Uma nota pode aparecer em mais de uma linha da fonte. Os painéis que usam contagem única ou sinalizam duplicidades aplicam critérios específicos; não é seguro somar diretamente linhas para concluir quantas obras únicas existem. Consulte o indicador de duplicidades.",
+    "Qualidade da base",
+    "notas duplicadas contagem unica"
+  ],
+  [
+    "Relatórios",
+    "Como usar os filtros múltiplos do relatório?",
+    "Abra a aba Relatórios, selecione a coluna e marque os valores desejados. Use a pesquisa dentro do seletor, aplique o filtro e combine condições. O botão Limpar tudo reinicia busca, filtros e ordenação próprios da tabela.",
+    "Relatórios",
+    "multiselect multiplos tabela filtro"
+  ],
+  [
+    "Relatórios",
+    "Como funciona a prévia do relatório?",
+    "A prévia mostra a configuração atual, colunas selecionadas e primeiras linhas do conjunto filtrado. A exportação considera todas as linhas elegíveis do recorte, não apenas as exibidas na prévia.",
+    "Relatórios",
+    "prévia imprimir pdf relatorio"
+  ],
+  [
+    "Relatórios",
+    "Como exportar CSV, Excel, PDF ou KML/KMZ?",
+    "Na aba Relatórios, aplique os filtros e selecione as colunas quando essa opção estiver disponível. Use os botões de exportação para gerar Excel/CSV, imprimir/salvar a visualização em PDF ou exportar o recorte geográfico em KML/KMZ. As exportações espaciais dependem de coordenadas válidas.",
+    "Relatórios",
+    "exportar excel csv pdf kmz kml imprimir"
+  ],
+  [
+    "Relatórios",
+    "Como funcionam os modelos salvos de filtros?",
+    "O recurso salva configurações usuais no navegador para reaplicação rápida. Como são preferências locais, podem não acompanhar o usuário ao trocar de computador ou limpar os dados do navegador.",
+    "Relatórios",
+    "modelo preset salvar filtros"
+  ],
+  [
+    "Relatórios",
+    "Por que há notas da BASE_LIST não encontradas em Relatórios?",
+    "Qualidade Levantamento e Produtividade recebem dados da BASE_LIST, enquanto Relatórios utiliza a base de obras NOTAS. As notas são cruzadas por identificador. Quando a mesma nota não existe em ambas as fontes, ela não pode ser materializada como obra do relatório principal.",
+    "Relatórios",
+    "integracao cruzamento bases notas nao encontradas"
+  ],
+  [
+    "Qualidade Levantamento",
+    "O que significa Correção de levantamento?",
+    "É o status identificado na coluna E da BASE_LIST que indica um levantamento com necessidade de correção, geralmente descrita na coluna AF. Esse status não comprova automaticamente culpa do levantador ou erro técnico de uma pessoa específica.",
+    "Qualidade Levantamento",
+    "correcao status list retorno campo"
+  ],
+  [
+    "Qualidade Levantamento",
+    "Como é montado o Top 5 de levantadores em correção?",
+    "O ranking conta os registros/notas enquadrados em Correção de levantamento e associados a cada profissional pela coluna O. Compare também a taxa indicativa de correção e o volume analisado, pois o total absoluto favorece equipes de maior volume.",
+    "Qualidade Levantamento",
+    "top 5 levantadores correcoes"
+  ],
+  [
+    "Qualidade Levantamento",
+    "Como é calculado o índice de correção?",
+    "A taxa indicativa compara obras em correção com a base de obras consideradas analisadas por levantador. Como o status da BASE_LIST é uma fotografia atual e não um histórico completo de reprovações, não interprete a taxa como índice definitivo de falhas individuais.",
+    "Qualidade Levantamento",
+    "indice taxa percentual qualidade"
+  ],
+  [
+    "Qualidade Levantamento",
+    "Como são classificados os motivos da coluna AF?",
+    "O texto das observações é agrupado por padrões/palavras-chave em categorias técnicas. Uma obra pode conter mais de um motivo e termos semelhantes podem ter significados diferentes; por isso, confira sempre o texto original e use o gráfico de Pareto como apoio, não como diagnóstico definitivo.",
+    "Qualidade Levantamento",
+    "af observacoes pareto motivos categorias"
+  ],
+  [
+    "Qualidade Levantamento",
+    "O que a coluna T informa sobre o analista?",
+    "A coluna T contém o analista de Pré-Análise registrado na obra. O painel indica correções e observações ausentes por analista; esse campo, isoladamente, não comprova quem mudou o status. Para auditoria de autoria é necessário histórico do sistema operacional.",
+    "Qualidade Levantamento",
+    "analista pre analise coluna t responsabilidade"
+  ],
+  [
+    "Qualidade Levantamento",
+    "Como são identificadas correções sem justificativa?",
+    "Para as obras com status Correção de levantamento na coluna E, o painel verifica se a observação da coluna AF está vazia. Se também faltar analista na coluna T, o registro é contabilizado como sem analista, sem atribuir responsabilidade a terceiros.",
+    "Qualidade Levantamento",
+    "sem justificativa af vazia analista"
+  ],
+  [
+    "Qualidade Levantamento",
+    "O que significa tempo entre levantamento e análise?",
+    "É o intervalo em dias entre a data Q, ligada ao levantamento, e a data U, da análise. Não equivale ao tempo de correção em campo ou ao prazo total de tratamento da pendência.",
+    "Qualidade Levantamento",
+    "tempo q u intervalo"
+  ],
+  [
+    "Qualidade Levantamento",
+    "Como funciona o mapa de correções?",
+    "O mapa destaca as notas em correção que possuem coordenadas válidas. Obras sem latitude/longitude não aparecem como pontos reais; os totais e a lista de registros devem deixar visíveis essas ausências.",
+    "Qualidade Levantamento",
+    "mapa correcoes municipio geografico"
+  ],
+  [
+    "Produtividade",
+    "O que muda ao selecionar data Q ou data U?",
+    "A coluna Q é a data do levantamento em campo; a coluna U é a data da análise do levantamento. O padrão para produtividade de campo é Q. Alterar para U passa a medir os registros analisados na data, que podem ter sido levantados anteriormente.",
+    "Produtividade",
+    "q u data levantamento analise referencia"
+  ],
+  [
+    "Produtividade",
+    "Como são somados postes existentes e novos?",
+    "A coluna R registra postes existentes levantados e a coluna S registra postes novos (PLN). São somas distintas; quando a contagem de postes está vazia, não se deve inventar quantidade. Uma nota com zero postes pode continuar contando como obra, se cumprir o critério de data e identificação.",
+    "Produtividade",
+    "poste existente r novo s pln"
+  ],
+  [
+    "Produtividade",
+    "Como funcionam os rankings diários, semanais e mensais?",
+    "A aba permite selecionar um período, uma data de referência e levantador. O Top 10 ordena obras e postes no recorte; confira se o ranking usa Q (campo) ou U (análise), porque as classificações podem mudar.",
+    "Produtividade",
+    "top 10 dia semana mes"
+  ],
+  [
+    "Produtividade",
+    "Como é calculada a média diária?",
+    "A média usa as obras ou postes do intervalo divididos pela quantidade de dias considerada pela visualização. Se o painel especificar dias com registro, essa média não equivale à média por todos os dias úteis do calendário.",
+    "Produtividade",
+    "media diaria ranking produtividade"
+  ],
+  [
+    "Produtividade",
+    "Como utilizar o calendário de produtividade?",
+    "Selecione a referência Q ou U, o período e o levantador quando desejado. O calendário apresenta distribuição por data; ao selecionar um dia, use o detalhamento para conferir notas, postes e municípios correspondentes.",
+    "Produtividade",
+    "calendario dia data"
+  ],
+  [
+    "Produtividade",
+    "Como interpretar a análise preditiva?",
+    "A previsão é uma projeção indicativa a partir da média diária de uma janela recente, aplicada aos próximos 7 ou 30 dias. Ela não representa promessa de produção nem substitui metas, capacidade, feriados e particularidades do trabalho de campo.",
+    "Produtividade",
+    "previsao preditiva 7 30 dias"
+  ],
+  [
+    "Produtividade",
+    "Como funcionam as metas configuráveis?",
+    "As metas ajudam a comparar realizado e objetivo para o período. Elas ficam separadas dos dados oficiais e podem ser armazenadas como preferência do navegador, de acordo com a configuração da interface. Uma meta não modifica a contagem da BASE_LIST.",
+    "Produtividade",
+    "meta objetivo percentual"
+  ],
+  [
+    "Produtividade",
+    "O que é a matriz Qualidade × Produtividade?",
+    "É uma comparação exploratória de volume de produção com indicador de correção por levantador. Considere tamanho da amostra, dificuldade das obras e completude das análises antes de usar quadrantes para avaliar desempenho individual.",
+    "Produtividade",
+    "matriz qualidade produtividade comparacao"
+  ],
+  [
+    "Produtividade",
+    "Por que o Excel e o dashboard podem mostrar quantidades diferentes?",
+    "Confira principalmente a referência Q versus U, o período, o levantador, filtros ativos, tratamento de datas em branco, notas duplicadas e postes vazios. Por exemplo, obras com Q preenchida e U vazia contam na produção de campo, mas não na produção analisada.",
+    "Produtividade",
+    "divergencia excel dashboard contagem"
+  ],
+  [
+    "Dados e privacidade",
+    "De onde vêm os dados e como são atualizados?",
+    "A aplicação utiliza uma base principal de obras (aba NOTAS) e uma base complementar de levantamentos (BASE_LIST). A atualização é centralizada na aplicação. Os painéis documentam regras e lacunas sem exigir exposição da infraestrutura de hospedagem ou armazenamento ao usuário final.",
+    "Geral",
+    "fonte atualizacao excel base list notas"
+  ],
+  [
+    "Dados e privacidade",
+    "O assistente FAQ consulta informações em tempo real?",
+    "A busca responde com base neste manual de funcionamento e não consulta automaticamente as contagens atuais, notas individuais, banco de dados ou serviços externos. Para valores exatos, abra a aba correspondente. Quando uma pergunta não estiver coberta, o assistente deve informar a limitação.",
+    "FAQ / Dúvidas",
+    "ia perguntas tempo real inteligencia"
+  ],
+  [
+    "Dados e privacidade",
+    "Como corrigir erro de dados ou dúvidas sobre indicador?",
+    "Localize a nota no painel, confira colunas de origem e filtros, e valide a regra de contagem no manual. Os painéis não devem alterar automaticamente planilhas oficiais. Se houver diferença, registre exemplo concreto de nota, período e filtros utilizados.",
+    "FAQ / Dúvidas",
+    "erros suporte discrepancias"
+  ]
+]
