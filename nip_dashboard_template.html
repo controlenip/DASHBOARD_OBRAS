@@ -994,4 +994,78 @@ const report=get('nip-tab-relatorios');if(report){let banner=document.createElem
 window.nipCrossBridge={publish,openReports,clearReport,prodRows,listQuality};
 })();
 </script>
+<style id="nip-layout-cards-fix">
+/* Padrao de alinhamento das sete abas: cabecalhos, legendas, valores e tabelas. */
+.nip-tab, .nip-tab .nip-box, .nip-tab .nip-cross-box,
+.nip-tab h1,.nip-tab h2,.nip-tab h3,.nip-tab h4,
+.nip-tab p,.nip-tab label,.nip-tab small,.nip-tab .nip-mini,
+.nip-tab .nip-ops-hint,.nip-tab th,.nip-tab td,
+.nip-tab .workload-kpis>div,.nip-tab .load-alert-summary>div {text-align:left!important}
+.nip-tab th,.nip-tab td {vertical-align:middle}
+#workload .workload-kpis>div,#workload .load-alert-summary>div{cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s;position:relative}
+#workload .workload-kpis>div:hover,#workload .load-alert-summary>div:hover{box-shadow:0 2px 10px #0c507b35;transform:translateY(-1px);outline:2px solid #08809a;outline-offset:-2px}
+#workload .workload-kpis>div:focus-visible,#workload .load-alert-summary>div:focus-visible{outline:3px solid #0a829e;outline-offset:2px}
+#nipCardWorkDetail{background:#fff;border:1px solid #b2d3df;border-radius:9px;padding:15px;margin:16px 0;scroll-margin-top:12px}
+#nipCardWorkDetail[hidden]{display:none!important}
+#nipCardWorkDetail .nip-card-detail-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:8px 0 12px}
+#nipCardWorkDetail .nip-card-detail-toolbar button{background:#087b91;color:white;border:0;padding:8px 12px;border-radius:6px;cursor:pointer}
+#nipCardWorkDetail .nip-card-detail-toolbar button.secondary{background:#ecf3f7;color:#16415a;border:1px solid #a8c8d9}
+#nipCardWorkDetail .nip-card-detail-scroll{max-height:410px;overflow:auto}
+#nipCardWorkDetail table{border-collapse:collapse;width:100%;font-size:12px}
+#nipCardWorkDetail th,#nipCardWorkDetail td{padding:9px;border-bottom:1px solid #d8e7ef;text-align:left!important;white-space:nowrap}
+#nipCardWorkDetail th{background:#173b55;color:white;position:sticky;top:0}
+</style>
+<script id="nip-card-events-layout-fix">
+(function(){'use strict';
+ const workload=document.getElementById('workload');
+ if(!workload)return;
+ // A carga deve aparecer antes dos demais paineis, sem clonar os controles nem perder listeners.
+ const lev=workload.closest('.nip-tab');
+ if(lev && lev.firstElementChild!==workload)lev.insertBefore(workload,lev.firstElementChild);
+ const config={
+ wlTotal:['Total elegível','all'],wlZero:['LIST 0','zero'],wlCorr:['Correção de levantamento','corr'],
+ wlAndamento:['Em levantamento','andamento'],wlLow:['Recarregar demanda (1 a 9 obras)','low'],
+ wlOk:['Carga entre 10 e 50','ok'],wlHigh:['Verificar acúmulo (51+ obras)','high'],
+ wlUnassigned:['Obras sem levantador','unassigned']};
+ const clean=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function noStaff(r){let name=String(r.LEVANTADOR??'').trim();return !name||name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase()==='SEM LEVANTADOR'}
+ function findRows(kind){
+  const eligible=CURRENT.filter(r=>!!staffLoadStatus(r));
+  if(kind==='all')return eligible;
+  if(kind==='zero'||kind==='corr'||kind==='andamento')return eligible.filter(r=>workloadStatus(r)===kind);
+  if(kind==='unassigned')return eligible.filter(noStaff);
+  const counts=new Map();for(const r of eligible){if(noStaff(r))continue;const name=String(r.LEVANTADOR??'').trim();counts.set(name,(counts.get(name)||0)+1)}
+  const selectedNames=new Set([...counts].filter(([name,num])=>kind==='low'?num>=1&&num<=9:kind==='ok'?num>=10&&num<=50:num>=51).map(([name])=>name));
+  return eligible.filter(r=>selectedNames.has(String(r.LEVANTADOR??'').trim()));
+ }
+ const target=document.createElement('section');target.id='nipCardWorkDetail';target.hidden=true;
+ target.innerHTML='<h3 id="nipCardWorkTitle">Obras selecionadas</h3><p id="nipCardWorkInfo"></p><div class="nip-card-detail-toolbar"><span id="nipCardWorkCount"></span><div><button type="button" id="nipCardWorkReport">Abrir em RELATÓRIOS →</button> <button type="button" id="nipCardWorkClose" class="secondary">Fechar detalhamento</button></div></div><div class="nip-card-detail-scroll"><table><thead><tr><th>Nota</th><th>Levantador</th><th>Município</th><th>Status LIST</th><th>Status SAP</th><th>Data despacho</th></tr></thead><tbody id="nipCardWorkRows"></tbody></table></div>';
+ const anchor=workload.querySelector('.load-alert-summary')||workload.querySelector('.workload-kpis');
+ if(anchor)anchor.after(target);else workload.append(target);
+ let currentRows=[],currentLabel='';
+ function present(id){const conf=config[id];if(!conf)return;currentLabel=conf[0];currentRows=findRows(conf[1]);
+  const teams=new Set(currentRows.filter(r=>!noStaff(r)).map(r=>String(r.LEVANTADOR).trim()));
+  document.getElementById('nipCardWorkTitle').textContent='Obras — '+currentLabel;
+  document.getElementById('nipCardWorkInfo').textContent='Seleção conforme filtros ativos e critérios de elegibilidade da carga, incluindo a opção da coluna M.';
+  document.getElementById('nipCardWorkCount').textContent=currentRows.length.toLocaleString('pt-BR')+' obras'+(['low','ok','high'].includes(conf[1])?' · '+teams.size+' levantadores':'');
+  const cells=['PROTOCOLO','LEVANTADOR','MUNICIPIO','STATUS LIST','STATUS SAP','DATA DESPACHO'];
+  document.getElementById('nipCardWorkRows').innerHTML=currentRows.slice(0,300).map(r=>'<tr>'+cells.map(k=>'<td>'+clean(r[k]||'—')+'</td>').join('')+'</tr>').join('')||'<tr><td colspan="6">Nenhuma obra encontrada.</td></tr>';
+  if(currentRows.length>300)document.getElementById('nipCardWorkInfo').textContent+=' Exibindo as primeiras 300 linhas; o conjunto completo pode ser encaminhado para RELATÓRIOS.';
+  target.hidden=false;target.scrollIntoView({block:'nearest',behavior:'smooth'});
+ }
+ for(const id of Object.keys(config)){
+  const value=document.getElementById(id);if(!value)continue;
+  const card=value.parentElement;if(!card)continue;
+  card.classList.add('nip-link-card');card.tabIndex=0;card.setAttribute('role','button');card.setAttribute('aria-label','Consultar obras: '+config[id][0]);
+  // Capture evita concorrencia com manipuladores antigos sem alterar os calculos.
+  card.addEventListener('click',e=>{e.stopImmediatePropagation();present(id)},true);
+  card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopImmediatePropagation();present(id)}},true);
+ }
+ document.getElementById('nipCardWorkClose').addEventListener('click',()=>{target.hidden=true});
+ document.getElementById('nipCardWorkReport').addEventListener('click',()=>{
+  if(window.nipCrossBridge){window.nipCrossBridge.publish(currentLabel,currentRows,'notas');window.nipCrossBridge.openReports();}
+  else alert('A integração de relatórios não está disponível nesta versão.');
+ });
+})();
+</script>
 </body></html>

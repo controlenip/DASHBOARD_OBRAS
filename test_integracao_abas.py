@@ -15,7 +15,7 @@ assert "let nipTableAppliedFilters=[]" in s and 'nipOpsTableRefresh()' in s
 assert 'nipTableAppliedFilters.every' in s and "!bridge||bridge.notes.has" in s
 base_scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',original,re.S)
 scripts=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S)
-assert len(scripts)==len(base_scripts)+1
+assert len(scripts)==len(base_scripts)+2
 for i,script in enumerate(scripts):
  if not script.strip():continue
  js=re.sub(r'__NIP_[A-Z_]+__','null',script)

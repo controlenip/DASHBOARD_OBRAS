@@ -1,0 +1,1 @@
+Atualizacao de interface: substituir somente nip_dashboard_template.html no repositorio. app_nip.py e nip_analytics.py inclusos como referencia. Regras de dados nao alteradas. Cards abrem detalhe diretamente dentro da secao de carga e permitem enviar a selecao para Relatorios. Verificacao visual em Streamlit pendente.
