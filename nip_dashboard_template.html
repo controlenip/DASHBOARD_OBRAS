@@ -706,4 +706,90 @@ window.nipResetMapState=function(){
   btn.addEventListener('click',()=>{const menu=document.getElementById('nipToolsMenu');if(menu)menu.open=false;window.nipResetMapState?.()});
 })();
 </script>
+
+<style>
+#nip-tab-qualidade-list .ql-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px;margin:14px 0}
+#nip-tab-qualidade-list .ql-card{background:#eaf3f7;border:1px solid #d4e5ee;border-radius:9px;padding:16px}
+#nip-tab-qualidade-list .ql-card small{display:block;color:#476279}#nip-tab-qualidade-list .ql-card strong{font-size:27px;color:#143c63}
+#nip-tab-qualidade-list .ql-table{width:100%;border-collapse:collapse;font-size:13px}
+#nip-tab-qualidade-list .ql-table th{text-align:left;background:#e9f1f7;padding:9px;color:#17365d}
+#nip-tab-qualidade-list .ql-table td{padding:9px;border-bottom:1px solid #dce6ed;vertical-align:top}
+#nip-tab-qualidade-list .ql-table tr:hover td{background:#f2f8fb}
+#nip-tab-qualidade-list .ql-scroll{max-height:470px;overflow:auto}
+#nip-tab-qualidade-list .ql-bar{height:9px;background:#e2ecf3;border-radius:5px;overflow:hidden;min-width:80px}
+#nip-tab-qualidade-list .ql-bar span{display:block;background:#0c7d91;height:100%}
+#nip-tab-qualidade-list .ql-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:12px 0}
+#nip-tab-qualidade-list .ql-controls select,#nip-tab-qualidade-list .ql-controls input{padding:8px;border:1px solid #a9c1d3;border-radius:6px;background:#fff;max-width:100%}
+#nip-tab-qualidade-list .ql-note{color:#5a6f80;font-size:12px;line-height:1.5}
+</style>
+<script>
+(function(){
+'use strict';
+const records=__NIP_LIST_PAYLOAD__;
+const source=__NIP_LIST_STATUS__;
+const nav=document.getElementById('nipNav');
+if(!nav)return;
+const btn=document.createElement('button');btn.type='button';btn.textContent='Qualidade Levantamento';btn.dataset.qualityList='1';nav.append(btn);
+const panel=document.createElement('div');panel.id='nip-tab-qualidade-list';panel.className='nip-tab nip-hidden';
+const main=document.querySelector('main');main.append(panel);
+panel.innerHTML=`<section class="nip-box"><h2>QUALIDADE LEVANTAMENTO — Retornos para correção</h2>
+<p class="ql-note" id="qlSource"></p><div class="ql-grid" id="qlMetrics"></div>
+<p class="ql-note">A análise considera exclusivamente as linhas com coluna E = CORREÇÃO DE LEVANTAMENTO na BASE_LIST, usando a coluna O (levantador), T (analista de Pré-Análise) e AF (observações). As contagens representam registros encontrados; não são taxa de erro nem medem qualidade relativa sem o total de obras executadas.</p></section>
+<section class="nip-box"><h2>Top 5 levantadores com mais retornos para correção</h2><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Posição</th><th>Levantador</th><th>Obras em correção</th><th>Participação nas correções</th><th>Distribuição</th></tr></thead><tbody id="qlTop"></tbody></table></div></section>
+<section class="nip-box"><h2>Analistas de Pré-Análise — correções e justificativas ausentes</h2>
+<p class="ql-note">A coluna T identifica o analista registrado na BASE_LIST. Isso não comprova, isoladamente, quem alterou o status; para confirmar a autoria da alteração é necessário um histórico de ações. Obras sem analista informado são mostradas separadamente.</p>
+<div class="ql-grid" id="qlAnalystMetrics"></div>
+<div class="ql-controls"><label>Analista <select id="qlAnalystSelect"></select></label><label><input id="qlOnlyMissing" type="checkbox"> Mostrar apenas correções sem observação (AF vazia)</label></div>
+<div class="ql-scroll"><table class="ql-table"><thead><tr><th>Analista registrado (T)</th><th>Obras em correção</th><th>Sem observação (AF)</th><th>% sem observação</th></tr></thead><tbody id="qlAnalystRanking"></tbody></table></div>
+<h3>Obras com observação não preenchida</h3><p class="ql-note">Detalhamento auditável por nota e linha de origem. Filtre o analista para identificar quais registros estão sem justificativa.</p>
+<div class="ql-scroll"><table class="ql-table"><thead><tr><th>Linha</th><th>Nota</th><th>Analista (T)</th><th>Levantador (O)</th><th>Observação (AF)</th></tr></thead><tbody id="qlAnalystMissingRows"></tbody></table></div></section>
+<section class="nip-box"><h2>Motivos apontados nas observações</h2><p class="ql-note">Classificação indicativa por palavras-chave, não substitui a leitura técnica da observação original. Uma observação pode conter vários motivos; os totais de motivos podem superar o total de obras.</p>
+<div class="ql-controls"><label>Levantador <select id="qlStaff"></select></label><label>Pesquisar observação <input id="qlSearch" placeholder="Trecho da observação"></label></div>
+<div class="ql-grid" id="qlReasonMetrics"></div><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Motivo identificado</th><th>Ocorrências</th><th>% dos registros selecionados</th></tr></thead><tbody id="qlReasons"></tbody></table></div></section>
+<section class="nip-box"><h2>Observações originais das obras em correção</h2><p class="ql-note">Consulta às descrições originais da coluna AF, preservadas sem edição. Linhas de origem permitem conferência na BASE_LIST.</p><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Linha da BASE_LIST</th><th>Nota</th><th>Levantador</th><th>Analista (T)</th><th>Motivos identificados</th><th>Observação original</th></tr></thead><tbody id="qlRows"></tbody></table></div></section>`;
+const el=id=>document.getElementById(id);
+const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normal=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+const patterns=[
+['Coordenadas / localização',/COORDENAD|LOCALIZA[CÇ][AÃ]O|GPS|GEOREFER|PONTO ERRADO|PONTO INCORRETO/],
+['Postes / estruturas',/POSTE|ESTRUTURA|CRUZETA|ESTAI/],
+['Rede BT / MT / traçado',/REDE|TRA[CÇ]ADO|CIRCUITO|BT\b|MT\b|CONDUTOR|CABO/],
+['Transformador / equipamentos',/TRANSFORMADOR|RELIGADOR|EQUIPAMENTO|CHAVE|TRAFO/],
+['Fotos / evidências',/FOTO|IMAGEM|EVID[EÊ]NCIA|REGISTRO FOTOGR/],
+['Medição / distância',/DIST[AÂ]NCIA|MEDI[CÇ][AÃ]O|METRAGEM|ALTURA|V[AÃ]O/],
+['Cadastro / informação incompleta',/CADASTR|INFORMA[CÇ][AÃ]O|DADO|PREENCH|FALTANDO|AUSENTE|INCOMPLET/],
+['Acesso / impedimento de campo',/ACESSO|IMPEDIMENTO|PROPRIET[AÁ]RIO|AUTORIZA[CÇ][AÃ]O|ENTRADA/]
+];
+function reasons(obs){let text=normal(obs);const hits=patterns.filter(p=>p[1].test(text)).map(p=>p[0]);return hits.length?hits:['Outros / não classificados']}
+const totals=new Map();records.forEach(r=>totals.set(r.levantador,(totals.get(r.levantador)||0)+1));
+const staff=[...totals].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'pt-BR'));
+el('qlSource').textContent=source;
+el('qlMetrics').innerHTML=[['Registros em correção',records.length],['Levantadores identificados',staff.filter(x=>x[0]!=='(Sem levantador)').length],['Sem levantador',totals.get('(Sem levantador)')||0],['Sem observação',records.filter(r=>!r.observacoes).length]].map(([a,b])=>`<div class="ql-card"><small>${escape(a)}</small><strong>${Number(b).toLocaleString('pt-BR')}</strong></div>`).join('');
+const analysts=new Map();records.forEach(r=>{const name=r.analista||'(Sem analista informado)';if(!analysts.has(name))analysts.set(name,{total:0,missing:0});const a=analysts.get(name);a.total++;if(!r.observacoes)a.missing++});
+const analystRanking=[...analysts].sort((a,b)=>b[1].missing-a[1].missing||b[1].total-a[1].total||a[0].localeCompare(b[0],'pt-BR'));
+const noObs=records.filter(r=>!r.observacoes);
+el('qlAnalystMetrics').innerHTML=[['Correções sem justificativa',noObs.length],['Sem justificativa, com analista',noObs.filter(r=>r.analista&&r.analista!=='(Sem analista informado)').length],['Sem justificativa e sem analista',noObs.filter(r=>!r.analista||r.analista==='(Sem analista informado)').length]].map(([label,n])=>`<div class="ql-card"><small>${escape(label)}</small><strong>${n.toLocaleString('pt-BR')}</strong></div>`).join('');
+el('qlAnalystSelect').innerHTML='<option value="">Todos os analistas</option>'+analystRanking.map(([name])=>`<option value="${escape(name)}">${escape(name)}</option>`).join('');
+function drawAnalysts(){const chosen=el('qlAnalystSelect').value,onlyMissing=el('qlOnlyMissing').checked;
+const ordered=analystRanking.filter(([name,a])=>(!chosen||name===chosen)&&(!onlyMissing||a.missing));
+el('qlAnalystRanking').innerHTML=ordered.map(([name,a])=>`<tr><td>${escape(name)}</td><td>${a.total.toLocaleString('pt-BR')}</td><td><b>${a.missing.toLocaleString('pt-BR')}</b></td><td>${(100*a.missing/a.total).toFixed(1).replace('.',',')}%</td></tr>`).join('')||'<tr><td colspan="4">Nenhum registro corresponde aos filtros.</td></tr>';
+const rows=noObs.filter(r=>!chosen||(r.analista||'(Sem analista informado)')===chosen);
+el('qlAnalystMissingRows').innerHTML=rows.map(r=>`<tr><td>${r.linha}</td><td>${escape(r.nota)}</td><td>${escape(r.analista||'(Sem analista informado)')}</td><td>${escape(r.levantador)}</td><td><b>Não preenchida</b></td></tr>`).join('')||'<tr><td colspan="5">Nenhuma obra sem observação para este analista.</td></tr>';
+}
+el('qlAnalystSelect').addEventListener('change',drawAnalysts);el('qlOnlyMissing').addEventListener('change',drawAnalysts);drawAnalysts();
+const max=staff[0]?.[1]||1;
+el('qlTop').innerHTML=staff.slice(0,5).map(([name,n],i)=>`<tr><td>${i+1}º</td><td>${escape(name)}</td><td><b>${n.toLocaleString('pt-BR')}</b></td><td>${records.length?(100*n/records.length).toFixed(1).replace('.',','):0}%</td><td><div class="ql-bar"><span style="width:${100*n/max}%"></span></div></td></tr>`).join('')||'<tr><td colspan="5">Nenhuma obra em correção encontrada.</td></tr>';
+el('qlStaff').innerHTML='<option value="">Todos os levantadores</option>'+staff.map(([n])=>`<option value="${escape(n)}">${escape(n)}</option>`).join('');
+function draw(){const selected=el('qlStaff').value,q=normal(el('qlSearch').value);let rows=records.filter(r=>(!selected||r.levantador===selected)&&(!q||normal(r.observacoes).includes(q)));
+const reasonsCount=new Map();rows.forEach(r=>reasons(r.observacoes).forEach(reason=>reasonsCount.set(reason,(reasonsCount.get(reason)||0)+1)));
+const ordered=[...reasonsCount].sort((a,b)=>b[1]-a[1]);
+el('qlReasonMetrics').innerHTML=`<div class="ql-card"><small>Registros selecionados</small><strong>${rows.length.toLocaleString('pt-BR')}</strong></div><div class="ql-card"><small>Com observações</small><strong>${rows.filter(r=>r.observacoes).length.toLocaleString('pt-BR')}</strong></div>`;
+el('qlReasons').innerHTML=ordered.map(([reason,n])=>`<tr><td>${escape(reason)}</td><td>${n.toLocaleString('pt-BR')}</td><td>${rows.length?(100*n/rows.length).toFixed(1).replace('.',','):0}%</td></tr>`).join('')||'<tr><td colspan="3">Nenhum motivo identificado.</td></tr>';
+el('qlRows').innerHTML=rows.slice(0,300).map(r=>`<tr><td>${r.linha}</td><td>${escape(r.nota||'')}</td><td>${escape(r.levantador)}</td><td>${escape(r.analista||'(Sem analista informado)')}</td><td>${escape(reasons(r.observacoes).join(' · '))}</td><td>${escape(r.observacoes||'(Sem observação)')}</td></tr>`).join('')||'<tr><td colspan="6">Nenhuma observação para os filtros escolhidos.</td></tr>';
+}
+el('qlStaff').addEventListener('change',draw);el('qlSearch').addEventListener('input',draw);draw();
+btn.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(x=>x.classList.add('nip-hidden'));panel.classList.remove('nip-hidden');nav.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');});
+nav.addEventListener('click',e=>{if(!e.target.closest('button[data-tab]'))return;panel.classList.add('nip-hidden');btn.classList.remove('selected')});
+})();
+</script>
 </body></html>
