@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent
 EXCEL_NAME = 'BASE_LEVANTAMENTO_ATUALIZADA.xlsx'
 TEMPLATE_NAME = 'nip_dashboard_template.html'
 LIST_NAME = 'BASE_LIST.xlsx'
+LOCALIDADE_NAME = 'LOCALIDADE LEVANTADORES-SANEAMENTO.xlsx'
 REQUIRED = ['ID SISCO','STATUS LIST','STATUS SAP','STATUS SISCO','REGIONAL','MUNICIPIO','LEVANTADOR','DATA DESPACHO']
 
 def setting(name, default=''):
@@ -158,6 +159,56 @@ def get_shared_list():
     if local.exists():
         return local.read_bytes(), 'Dados disponíveis'
     return None, 'Dados de qualidade e produtividade indisponíveis no momento.'
+
+@st.cache_data(ttl=90, show_spinner=False)
+def get_shared_localidade():
+    """Read-only residence reference; never assigns or changes an obra."""
+    try:
+        remote = get_remote_file(filename=LOCALIDADE_NAME)
+        if remote is not None:
+            return remote
+    except Exception:
+        pass
+    local = ROOT / LOCALIDADE_NAME
+    return local.read_bytes() if local.exists() else None
+
+
+@st.cache_data(show_spinner=False, max_entries=4)
+def parse_localidade(blob: bytes):
+    """Residence points for geographic comparison ONLY."""
+    import math
+    import unicodedata
+    def normalized(value):
+        return ''.join(c for c in unicodedata.normalize('NFKD', str(value or ''))
+                       if not unicodedata.combining(c)).strip().upper()
+    book = pd.read_excel(io.BytesIO(blob), sheet_name=None, engine='openpyxl', dtype=object)
+    people = []
+    for sheet, team in [('LEVANTADORES', 'Levantamento'), ('SANEAMENTO', 'Saneamento')]:
+        name = next((key for key in book if normalized(key) == sheet), None)
+        if name is None:
+            raise ValueError(f'A planilha de localidade nao possui a aba {sheet}.')
+        df = book[name]
+        lookup = {normalized(c): c for c in df.columns}
+        required = ['NOME', 'LATITUDE', 'LONGITUDE']
+        if any(c not in lookup for c in required):
+            raise ValueError(f'Aba {sheet}: colunas Nome, Latitude e Longitude obrigatorias.')
+        city_col = lookup.get('CIDADES') or lookup.get('CIDADE')
+        for _, row in df.iterrows():
+            person = str(row[lookup['NOME']]).strip() if pd.notna(row[lookup['NOME']]) else ''
+            if not person:
+                continue
+            try:
+                lat = float(str(row[lookup['LATITUDE']]).strip().replace(',', '.'))
+                lon = float(str(row[lookup['LONGITUDE']]).strip().replace(',', '.'))
+            except (TypeError, ValueError):
+                continue
+            if not (math.isfinite(lat) and math.isfinite(lon) and -90 <= lat <= 90 and -180 <= lon <= 180):
+                continue
+            city = row[city_col] if city_col else ''
+            people.append({'nome': person, 'cidade': str(city).strip() if pd.notna(city) else '',
+                           'lat': lat, 'lon': lon, 'equipe': team})
+    return json.dumps(people, ensure_ascii=False, separators=(',', ':'))
+
 
 @st.cache_data(show_spinner=False,max_entries=4)
 def parse_list_quality(blob:bytes):
@@ -359,6 +410,20 @@ def main():
         payload=(payload.replace('<','\\u003c').replace('>','\\u003e')
                  .replace('&','\\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
         html=template.replace('__NIP_DATA_PAYLOAD__',payload)
+        if template.count('__NIP_LOCALIDADE_PAYLOAD__') != 1:
+            raise ValueError('Marcador de localidade ausente ou duplicado no HTML.')
+        localidade_payload = '[]'
+        localidade_blob = get_shared_localidade()
+        if localidade_blob is not None:
+            try:
+                localidade_payload = parse_localidade(localidade_blob)
+            except Exception:
+                # Do not replace residence locations with stale hardcoded data.
+                localidade_payload = '[]'
+        localidade_payload = (localidade_payload.replace('<', '\\u003c')
+                             .replace('>', '\\u003e').replace('&', '\\u0026')
+                             .replace('\u2028', '\\u2028').replace('\u2029', '\\u2029'))
+        html = html.replace('__NIP_LOCALIDADE_PAYLOAD__', localidade_payload)
         list_payload='[]'
         productivity_payload='[]'
         productivity_status='Dados de produtividade indisponíveis no momento.'
