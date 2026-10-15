@@ -1168,10 +1168,33 @@ renderCategories();renderArticles();
  const ctrl=document.createElement('div');ctrl.className='nip-ops-tools';ctrl.innerHTML='<label for="nipStaffMapFilter">Colaboradores</label><select id="nipStaffMapFilter"><option value="all">Levantadores e Saneamento</option><option value="Levantamento">Levantadores</option><option value="Saneamento">Saneamento</option><option value="none">Ocultar colaboradores</option></select>';
  layer.appendChild(ctrl);
  const group=L.layerGroup().addTo(map);
- function draw(){group.clearLayers();const a=document.getElementById('nipStaffTeamFilter').value,b=document.getElementById('nipStaffMapFilter').value;
- for(const p of people){if(a==='none'||b==='none'||(a!=='all'&&p.equipe!==a)||(b!=='all'&&p.equipe!==b))continue;
- const marker=L.circleMarker([p.lat,p.lon],{radius:7,color:p.equipe==='Levantamento'?'#1661bc':'#8842aa',weight:2,fillOpacity:.85});
- marker.bindPopup('<div class="popuphead"><strong>'+esc(p.nome)+'</strong></div><div class="popupbody"><div class="info"><span>Equipe</span><b>'+esc(p.equipe)+'</b></div><div class="info"><span>Cidade</span><b>'+esc(p.cidade)+'</b></div><div class="info"><span>Coordenadas</span><b>'+p.lat+', '+p.lon+'</b></div></div>');marker.addTo(group)} }
+ // Coordenadas residenciais iguais formam somente um marcador e um card.
+ // Agrupa depois de aplicar os filtros, para nao exibir profissionais ocultos.
+ function draw(){
+   group.clearLayers();
+   const a=document.getElementById('nipStaffTeamFilter').value;
+   const b=document.getElementById('nipStaffMapFilter').value;
+   const locations=new Map();
+   for(const p of people){
+     if(a==='none'||b==='none'||(a!=='all'&&p.equipe!==a)||(b!=='all'&&p.equipe!==b))continue;
+     const lat=Number(p.lat),lon=Number(p.lon);
+     if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
+     const key=lat.toFixed(6)+','+lon.toFixed(6);
+     if(!locations.has(key))locations.set(key,{lat,lon,members:[]});
+     locations.get(key).members.push(p);
+   }
+   for(const location of locations.values()){
+     const members=location.members.sort((x,y)=>String(x.nome).localeCompare(String(y.nome),'pt-BR'));
+     const teams=new Set(members.map(p=>p.equipe));
+     const color=teams.size>1?'#087785':teams.has('Levantamento')?'#1661bc':'#8842aa';
+     const marker=L.circleMarker([location.lat,location.lon],{radius:members.length>1?9:7,color,weight:2,fillOpacity:.85});
+     const title=members.length===1?esc(members[0].nome):members.length+' colaboradores no mesmo local';
+     const detail=members.map(p=>'<div class="info"><span>'+esc(p.equipe)+'</span><b>'+esc(p.nome)+'</b></div>').join('');
+     const cities=[...new Set(members.map(p=>p.cidade).filter(Boolean))].map(esc).join(' / ');
+     marker.bindPopup('<div class="popuphead"><strong>'+title+'</strong></div><div class="popupbody">'+detail+'<div class="info"><span>Cidade</span><b>'+cities+'</b></div><div class="info"><span>Coordenadas</span><b>'+location.lat+', '+location.lon+'</b></div></div>');
+     marker.addTo(group);
+   }
+ }
  for(const id of ['nipStaffTeamFilter','nipStaffMapFilter'])document.getElementById(id).addEventListener('change',draw);
  for(const id of ['reset','nipClearMap'])document.getElementById(id)?.addEventListener('click',()=>{document.getElementById('nipStaffTeamFilter').value='all';document.getElementById('nipStaffMapFilter').value='all';draw()});
  draw();
