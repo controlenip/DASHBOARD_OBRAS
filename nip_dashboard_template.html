@@ -1167,6 +1167,11 @@ renderCategories();renderArticles();
  side.appendChild(field);
  const ctrl=document.createElement('div');ctrl.className='nip-ops-tools';ctrl.innerHTML='<label for="nipStaffMapFilter">Colaboradores</label><select id="nipStaffMapFilter"><option value="all">Levantadores e Saneamento</option><option value="Levantamento">Levantadores</option><option value="Saneamento">Saneamento</option><option value="none">Ocultar colaboradores</option></select>';
  layer.appendChild(ctrl);
+ const residentialLegend=document.createElement('div');
+ residentialLegend.className='notice';
+ residentialLegend.style.cssText='display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:5px 0 10px';
+ residentialLegend.innerHTML='<b>Residências:</b> <span><span style="color:#6D28D9">●</span> Levantamento</span> <span><span style="color:#C2410C">●</span> Saneamento</span> <span><span style="color:#0F766E">●</span> Ambas</span>';
+ layer.appendChild(residentialLegend);
  const group=L.layerGroup().addTo(map);
  // Coordenadas residenciais iguais formam somente um marcador e um card.
  // Agrupa depois de aplicar os filtros, para nao exibir profissionais ocultos.
@@ -1186,7 +1191,7 @@ renderCategories();renderArticles();
    for(const location of locations.values()){
      const members=location.members.sort((x,y)=>String(x.nome).localeCompare(String(y.nome),'pt-BR'));
      const teams=new Set(members.map(p=>p.equipe));
-     const color=teams.size>1?'#087785':teams.has('Levantamento')?'#1661bc':'#8842aa';
+     const color=teams.size>1?'#0F766E':teams.has('Levantamento')?'#6D28D9':'#C2410C';
      const marker=L.circleMarker([location.lat,location.lon],{radius:members.length>1?9:7,color,weight:2,fillOpacity:.85});
      const title=members.length===1?esc(members[0].nome):members.length+' colaboradores no mesmo local';
      const detail=members.map(p=>'<div class="info"><span>'+esc(p.equipe)+'</span><b>'+esc(p.nome)+'</b></div>').join('');
