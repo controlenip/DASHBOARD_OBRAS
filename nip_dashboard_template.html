@@ -277,7 +277,7 @@ $n('nipPdf').onclick=()=>{let r=reportData(),w=window.open('','_blank');if(!w){a
  for(const id of ['reset','nipClearMap'])document.getElementById(id)?.addEventListener('click',()=>{document.getElementById('nipStaffTeamFilter').value='all';document.getElementById('nipStaffMapFilter').value='all';draw()});
  draw();
 })();
-</script></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),500)};
+<\/script></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),500)};
 function findNotes(){let q=$n('nipSearch').value.trim().toUpperCase();if(!q){$n('nipFound').textContent='Informe uma nota ou SGO.';return}let rows=DATA.filter(r=>[r.PROTOCOLO,r['ID SISCO'],r.SGO,r['Nº SGO'],r['N° SGO'],r['NÚMERO SGO']].some(v=>v!==undefined&&String(v).toUpperCase().includes(q))).slice(0,50);$n('nipFound').innerHTML=rows.length?`${rows.length} resultado(s) encontrados. `+rows.slice(0,8).map((r,i)=>`<button type="button" data-find="${i}">${t(r.PROTOCOLO||r['ID SISCO'])} · ${t(r.MUNICIPIO)}</button>`).join(' '):'Nenhuma nota encontrada. O campo SGO pode não existir na base.';window.nipFoundRows=rows;}
 $n('nipGo').onclick=findNotes;$n('nipSearch').addEventListener('keydown',e=>{if(e.key==='Enter')findNotes()});$n('nipFound').addEventListener('click',e=>{let b=e.target.closest('[data-find]');if(b)goToNote(window.nipFoundRows[Number(b.dataset.find)])});
 function renderExtras(){let os=renderAges();renderRedis(os);renderHeat(os);renderQuality();$n('nipReportInfo').textContent=`Referência ${new Date().toLocaleDateString('pt-BR')} · ${fmtN(CURRENT.length)} registros filtrados · ${fmtN(os.length)} elegíveis.`}
@@ -361,7 +361,7 @@ $n('nipExecutivePrint').onclick=()=>{let r=reportData(),w=window.open('','_blank
  for(const id of ['reset','nipClearMap'])document.getElementById(id)?.addEventListener('click',()=>{document.getElementById('nipStaffTeamFilter').value='all';document.getElementById('nipStaffMapFilter').value='all';draw()});
  draw();
 })();
-</script></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),300)};
+<\/script></body></html>`);w.document.close();w.focus();setTimeout(()=>w.print(),300)};
 // ---------------- fim das melhorias aditivas ----------------
 
 // ===== NIP 2026: ferramentas operacionais somente-leitura (sem comparacao de bases) =====
