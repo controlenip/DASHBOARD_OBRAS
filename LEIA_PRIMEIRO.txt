@@ -1,1 +1,0 @@
-Substitua somente app_nip.py no GitHub. Mantenha nip_ai.py, HTML, planilhas, nip_analytics.py e requirements.txt atuais. O botao NIP IA abre um dialogo Streamlit sobre o dashboard. As consultas sao somente leitura. Acoes de mapa sao sugeridas, nao executadas automaticamente nesta versao. Teste em ambiente de homologacao antes de publicar.
