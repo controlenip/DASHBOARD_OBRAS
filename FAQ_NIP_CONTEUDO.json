@@ -2,14 +2,14 @@
   {
     "category": "Primeiros passos",
     "question": "Como começar a usar o dashboard?",
-    "answer": "Comece pela Visão Geral; consulte a carga em Levantadores, atrasos em Prazos e Prioridades, produção de campo em Produtividade, análise de escritório em Pré-Análise, correções em Qualidade Levantamento e exportações em Relatórios. Use os quadros complementares para interpretar as contagens.",
+    "answer": "Use o menu lateral do Streamlit para abrir uma das oito páginas: Visão Geral, Levantadores, Prazos e Prioridades, Relatórios, Qualidade de Levantamento, Produtividade, Pré-Análise e FAQ / Dúvidas. Todas utilizam os mesmos arquivos de dados carregados pelo módulo compartilhado. Cada página apresenta seus próprios filtros e indicadores.",
     "tab": "Visão geral",
     "keywords": "inicio navegar usar dashboard menu"
   },
   {
     "category": "Visão geral",
     "question": "Como funcionam os filtros da visão geral?",
-    "answer": "Os filtros restringem o conjunto apresentado no mapa e nos indicadores vinculados. A seleção pode ser combinada, dependendo de cada controle; use Limpar mapa para restaurar as opções do mapa. Verifique o texto de cada indicador para saber se ele utiliza o conjunto filtrado ou alguma regra operacional adicional.",
+    "answer": "Os filtros da barra lateral restringem os registros utilizados pelo mapa e pelos indicadores compatíveis. A seleção pode combinar regional, município, status, contrato, levantador e datas, conforme os controles presentes. Na estrutura multipáginas, alguns campos globais são persistidos no navegador, mas os filtros internos de cada página podem ser independentes.",
     "tab": "Visão geral",
     "keywords": "filtros regional municipio status múltiplos"
   },
@@ -23,21 +23,21 @@
   {
     "category": "Visão geral",
     "question": "O que significam as cores dos marcadores?",
-    "answer": "As cores distinguem situações operacionais como LIST 0, Em levantamento, Correção de levantamento, Concluído, Análise e registros FINL/CANC. Os marcadores também podem destacar atraso ou prioridade. Consulte a legenda do mapa para interpretar a representação efetivamente ativa.",
+    "answer": "As cores dos pontos das obras indicam a classificação exibida na legenda. As equipes residenciais são identificadas por bonequinhos: roxo para Levantamento, laranja para Saneamento e verde-petróleo para ambas no mesmo ponto. Os bonequinhos não exibem contador numérico; quando várias pessoas compartilham coordenadas, seus nomes continuam no popup do marcador.",
     "tab": "Visão geral",
     "keywords": "cores legenda pinos status finl canc azul amarelo"
   },
   {
     "category": "Visão geral",
     "question": "Como consultar uma nota específica?",
-    "answer": "Use a pesquisa por nota, protocolo, ID SISCO ou demais identificadores oferecidos na interface. Os resultados dependem do conjunto carregado e dos filtros ativos. Também é possível pesquisar nas tabelas da aba Relatórios.",
+    "answer": "Na Visão Geral, use a pesquisa operacional na barra lateral, digitando nota, cliente ou endereço conforme os campos disponíveis. A caixa adicional de busca com tabela de resultados foi retirada do painel; ela não deve ser confundida com a pesquisa dos filtros.",
     "tab": "Visão geral",
     "keywords": "pesquisa nota sisco protocolo"
   },
   {
     "category": "Visão geral",
     "question": "Como limpar o mapa e os filtros?",
-    "answer": "Use Limpar mapa nas opções rápidas para remover seleções do mapa. Na aba Relatórios, Limpar tudo remove a pesquisa e filtros próprios da tabela; um comando não necessariamente redefine filtros independentes de outras abas.",
+    "answer": "Use Limpar filtros na barra lateral e os controles próprios do mapa, quando disponíveis. Na versão multipáginas, a pesquisa global, as datas e as caixas de seleção principais podem ser recuperadas ao trocar de página no mesmo navegador; revise os filtros ao abrir outra página.",
     "tab": "Visão geral",
     "keywords": "limpar zerar resetar filtros"
   },
@@ -247,7 +247,7 @@
   {
     "category": "Dados e privacidade",
     "question": "O assistente FAQ consulta informações em tempo real?",
-    "answer": "O FAQ é um manual local de consulta, não um agente de IA. Não consulta automaticamente as notas atuais nem serviços externos. Para contagens, utilize os indicadores das abas.",
+    "answer": "Não. O FAQ é um manual local com perguntas e respostas estáticas sobre as funcionalidades. Não existe agente NIP IA nesta versão. Os dados operacionais são carregados das planilhas, não das respostas do FAQ.",
     "tab": "FAQ / Dúvidas",
     "keywords": "ia perguntas tempo real inteligencia"
   },
@@ -261,7 +261,7 @@
   {
     "category": "Indicadores e navegação",
     "question": "Como usar os novos painéis complementares?",
-    "answer": "Os novos quadros explicam indicadores já existentes e acrescentam recortes de conferência. Não modificam o status, a distribuição de obras ou os dados de origem. Os totais de registros e de notas distintas podem ser diferentes.",
+    "answer": "Os painéis adicionais foram criados para complementar as análises de cada página. O bloco \"Resumo operacional e qualidade dos dados\" foi retirado da Visão Geral a pedido da operação. Consulte os indicadores e as análises restantes nas respectivas páginas.",
     "tab": "Visão geral",
     "keywords": "indicadores filtros navegação"
   },
@@ -275,7 +275,7 @@
   {
     "category": "Visão geral",
     "question": "Como interpretar obras sem coordenadas?",
-    "answer": "Uma obra sem latitude e longitude válidas continua no total da carteira, mas não aparece como marcador geográfico. O percentual de cobertura utiliza o total de registros da base como denominador.",
+    "answer": "Obras sem coordenadas válidas continuam contabilizadas nos indicadores e podem ser selecionadas pelo filtro correspondente. A listagem lateral detalhada de obras sem coordenadas foi retirada da Visão Geral; isso não elimina os registros da base.",
     "tab": "Visão geral",
     "keywords": "coordenadas cobertura mapa"
   },
@@ -355,5 +355,173 @@
     "answer": "Não. A opção NIP IA foi removida. Os painéis e o FAQ usam cálculos locais e não precisam de créditos de API para funcionar.",
     "tab": "FAQ / Dúvidas",
     "keywords": "sem ia api"
+  },
+  {
+    "category": "Primeiros passos",
+    "question": "Por que cada aba agora possui um arquivo Python?",
+    "answer": "O dashboard passou a ter oito arquivos em pages/, cada um correspondente a uma página do Streamlit. app_nip.py inicializa a navegação e nip_shared.py compartilha a leitura das planilhas e o motor visual. O HTML permanece compartilhado nesta etapa; os cálculos e os gráficos não foram integralmente reescritos em Python.",
+    "tab": "Visão geral",
+    "keywords": "pages py estrutura"
+  },
+  {
+    "category": "Primeiros passos",
+    "question": "Como mudar de página sem perder os dados?",
+    "answer": "Use o menu lateral do Streamlit. As páginas consultam as mesmas bases compartilhadas. Alguns filtros globais são guardados no navegador, mas os filtros internos de cada página podem precisar de nova seleção.",
+    "tab": "Visão geral",
+    "keywords": "menu navegação filtros persistencia"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Onde está o antigo quadro de resumo operacional?",
+    "answer": "O bloco Resumo operacional e qualidade dos dados foi retirado da interface. Os indicadores principais da carteira continuam disponíveis na Visão Geral.",
+    "tab": "Visão geral",
+    "keywords": "resumo removido"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que a lista lateral de obras sem coordenadas não aparece mais?",
+    "answer": "A lista lateral foi removida da interface para liberar espaço no mapa. As obras sem coordenadas permanecem na base e nas contagens; utilize o filtro Somente sem coordenadas para restringir a consulta.",
+    "tab": "Visão geral",
+    "keywords": "sem coordenadas lista removida"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que alguns bonequinhos representam mais de uma pessoa?",
+    "answer": "Pessoas com a mesma coordenada residencial são agrupadas num único bonequinho para evitar sobreposição. Clique no marcador para ver os colaboradores do local. O número ao lado do bonequinho foi removido.",
+    "tab": "Visão geral",
+    "keywords": "equipe marcador agrupamento"
+  },
+  {
+    "category": "Levantadores",
+    "question": "O filtro da coluna M interfere na carga atribuída?",
+    "answer": "Na página Levantadores, a opção de desconsiderar obras com coluna M diferente de 0 retira da carga as obras marcadas como orçamento modular não enviado a campo. A opção é marcada por padrão; células vazias não são excluídas por esse motivo.",
+    "tab": "Levantadores",
+    "keywords": "coluna M orçamento modular"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Quais status entram na carga por levantador?",
+    "answer": "A carga considera STATUS LIST 0, Em levantamento e Correção de levantamento, com exclusão de SAP FINL/CANC e aplicação das condições de SISCO indicadas no painel. Confira os filtros adicionais da página antes de comparar totais.",
+    "tab": "Levantadores",
+    "keywords": "carga status list sap sisco"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "A partir de qual data os dias de atraso são contados?",
+    "answer": "O prazo operacional é calculado a partir da data de despacho, não da última alteração de STATUS LIST. Notas sem data válida são separadas e não recebem prazo calculado.",
+    "tab": "Prazos e prioridades",
+    "keywords": "despacho prazo"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "O que significa obra acima de 10 dias?",
+    "answer": "É uma obra elegível cujo intervalo desde o despacho ultrapassou 10 dias corridos, conforme as regras SAP, SISCO e LIST informadas no painel. Isso não comprova inatividade desde a última mudança de status.",
+    "tab": "Prazos e prioridades",
+    "keywords": "10 dias atraso"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Como interpretar o calendário de prazos?",
+    "answer": "Use o mês e o dia selecionados para observar o recorte de datas oferecido pelo calendário. Confirme se o painel está utilizando despacho ou outro evento indicado no título, e lembre-se de que registros sem data válida não aparecem em dias do calendário.",
+    "tab": "Prazos e prioridades",
+    "keywords": "calendario prazo"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Os relatórios são iguais em todas as páginas?",
+    "answer": "A página Relatórios oferece filtros, prévia e formatos de exportação próprios. Algumas outras páginas também oferecem exportações específicas. A disponibilidade de CSV, Excel, PDF ou KML/KMZ depende do botão efetivamente exibido e dos dados disponíveis.",
+    "tab": "Relatórios",
+    "keywords": "exportacao formatos"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como evitar diferenças entre os totais exportados e os cards?",
+    "answer": "Compare a origem dos dados, os filtros ativos, a elegibilidade por status, o tratamento de duplicidades e a data da atualização. Nem todo card usa a mesma população da tabela exportada.",
+    "tab": "Relatórios",
+    "keywords": "conferencia contagem"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como distinguir quantidade de correções e taxa de correção?",
+    "answer": "A quantidade é o número de registros classificados como correção no recorte. Uma taxa exige denominador adequado, como o total de levantamentos comparáveis. Não interprete a contagem isolada como índice de desempenho individual.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "taxa denominador qualidade"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "A justificativa da coluna AF pode ficar vazia?",
+    "answer": "Sim. Uma correção sem justificativa preenchida pode aparecer nos controles de qualidade de dados. A ausência de texto não comprova motivo de correção; é uma pendência de registro.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "AF motivo"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Por que os totais diários não são iguais à carga da equipe?",
+    "answer": "Produtividade contabiliza eventos de produção, usando datas de levantamento e as regras da BASE_LIST. Carga representa obras atribuídas e elegíveis na carteira operacional. São métricas diferentes, com fontes e períodos distintos.",
+    "tab": "Produtividade",
+    "keywords": "Q produção carga"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como comparar períodos com números de dias diferentes?",
+    "answer": "Confira o intervalo selecionado e a métrica exibida. Médias por dia corrido não equivalem a médias por dia útil; diferenças de férias, feriados e escala não são ajustadas automaticamente, salvo indicação explícita.",
+    "tab": "Produtividade",
+    "keywords": "comparacao 30 dias"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Qual coluna identifica o analista e quais registram as datas?",
+    "answer": "Na BASE_LIST, T identifica o analista de Pré-Análise, Q a data do levantamento e U a data da análise de levantamento. A coluna E representa o status atual do projeto; não é um histórico de quem alterou o status.",
+    "tab": "Pré-Análise",
+    "keywords": "T Q U E"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que é uma análise pendente no painel?",
+    "answer": "Em geral, é um registro com data de levantamento Q preenchida e data de análise U ausente, respeitando os filtros e regras do painel. Esse critério não prova que a atividade esteja atrasada sem uma meta de prazo definida.",
+    "tab": "Pré-Análise",
+    "keywords": "pendencia fila"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que o calendário da Pré-Análise contabiliza?",
+    "answer": "O calendário implementado contabiliza as análises registradas pela data U. Selecionar um dia permite consultar o recorte correspondente; Q representa a entrada do levantamento em campo e não deve ser confundida com a data U.",
+    "tab": "Pré-Análise",
+    "keywords": "calendario U"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como são tratadas datas inconsistentes de Q e U?",
+    "answer": "Datas ausentes ou inválidas devem ser verificadas na BASE_LIST. Uma data U anterior a Q requer conferência do registro; não deve ser interpretada automaticamente como prazo negativo real de execução.",
+    "tab": "Pré-Análise",
+    "keywords": "datas inconsistentes"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Os filtros de uma página são aplicados automaticamente às demais?",
+    "answer": "Não necessariamente. O aplicativo usa as mesmas fontes e preserva alguns campos globais no navegador, mas filtros específicos de mapas, calendários, tabelas e rankings podem ser independentes. Confira os filtros ao trocar de página.",
+    "tab": "Visão geral",
+    "keywords": "multipaginas filtros"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "O botão Ir para a aba funciona na versão multipáginas?",
+    "answer": "Na versão multipáginas, a navegação principal deve ser feita pelo menu lateral do Streamlit. Os links internos do antigo HTML não são a referência para alternar entre arquivos Python.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "navegacao paginas"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O FAQ altera as planilhas ou os cálculos?",
+    "answer": "Não. O FAQ é conteúdo explicativo. As bases são carregadas pelo módulo compartilhado e os indicadores são produzidos pelas rotinas do dashboard. Atualizar as perguntas não altera os dados de origem.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "faq leitura"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O que fazer se uma página mostrar dados diferentes de outra?",
+    "answer": "Verifique o arquivo de origem, a data de atualização, os filtros, o tratamento de status e as regras específicas da página. Se a diferença persistir, registre nota e critérios para conferência no arquivo operacional.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "divergencia"
   }
 ]
