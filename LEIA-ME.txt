@@ -1,21 +1,26 @@
-CORRECAO - RESTAURACAO DO LAYOUT ORIGINAL DO DASHBOARD NIP
+DASHBOARD NIP - VISAO GERAL / GEO AVANCADO
 
-Substitua no GitHub: app_nip.py, nip_shared.py, nip_dashboard_template.html,
-FAQ_NIP_CONTEUDO.json e todos os arquivos da pasta pages/.
-Mantenha as planilhas, nip_analytics.py e Secrets existentes.
+Instalacao:
+1. Fazer backup do repositorio e testar em uma branch separada.
+2. Substituir app_nip.py, nip_shared.py, nip_dashboard_template.html,
+   FAQ_NIP_CONTEUDO.json e a pasta pages/ pelos arquivos do pacote.
+3. Preservar as planilhas oficiais, secrets do GitHub e logo existente.
+4. Executar o app por app_nip.py.
 
-CORRIGIDO:
-- Menu lateral nativo Streamlit oculto; voltam as abas horizontais originais.
-- HTML, CSS e JS originais preservados, com logo, mapa, cores e filtros.
-- Escape dos dados das planilhas antes de inseri-los em scripts HTML.
-- Cada uma das oito paginas continua tendo seu arquivo Python e URL de acesso.
+Novos controles na Visao Geral (aba horizontal do HTML):
+- Equipe e raio em linha reta (25/50/100/200 km).
+- Painel de carga, atrasos e obras proximas; clicar no bonequinho seleciona equipe.
+- Filtros complementares por faixas de idade, sem levantador e correcoes.
+- Camada de concentracao visual por obras ou elegiveis atrasadas.
+- Exportacao KML e KMZ; KMZ depende de JSZip na internet.
+- Auditoria de coordenadas e exportacao CSV.
 
-LIMITACAO ARQUITETURAL:
-As abas horizontais continuam funcionando no HTML compartilhado, sem necessariamente
-alterar a URL Streamlit. O motor JavaScript ainda e comum as oito paginas.
-Para uma separacao real dos graficos por pagina sera necessario refatorar o HTML
-por componentes e validar a comunicacao entre paginas. Esta versao prioriza
-restaurar a aparencia e o funcionamento existentes.
+Os filtros novos NAO substituem o recorte oficial CURRENT, nao redistribuem
+obras, nao alteram a base original nem os contadores principais.
+Distancia: linha reta Haversine, nao tempo/rota por estrada.
+Faixa de coordenadas usada na auditoria: retangulo aproximado do Maranhao.
+Coordenadas repetidas nao implicam erro obrigatoriamente.
 
-TESTES: validacao sintatica dos arquivos Python e scripts JS do template.
-A verificacao completa em Streamlit com bases reais deve ser feita em branch de teste.
+VALIDACAO EFETUADA: compilar Python; verificar sintaxe JS (20 scripts).
+AINDA NECESSARIO: teste integrado com BASE_LEVANTAMENTO_ATUALIZADA,
+BASE_LIST e LOCALIDADE LEVANTADORES-SANEAMENTO no Streamlit publicado.

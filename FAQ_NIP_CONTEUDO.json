@@ -523,5 +523,68 @@
     "answer": "Verifique o arquivo de origem, a data de atualização, os filtros, o tratamento de status e as regras específicas da página. Se a diferença persistir, registre nota e critérios para conferência no arquivo operacional.",
     "tab": "FAQ / Dúvidas",
     "keywords": "divergencia"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como funciona o raio de atendimento?",
+    "answer": "Na Visão Geral selecione um colaborador e um raio de 25, 50, 100 ou 200 km. A distância é geodésica aproximada em linha reta (Haversine), medida a partir da coordenada cadastrada do colaborador; não é um tempo nem percurso rodoviário.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "A seleção de obras próximas altera a atribuição?",
+    "answer": "Não. A ferramenta apenas consulta obras próximas à residência cadastrada. A coluna LEVANTADOR e a atribuição oficial permanecem inalteradas.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "O que mostra o painel do levantador?",
+    "answer": "Mostra a carga elegível atribuída ao colaborador, as obras elegíveis com mais de 10 dias desde o despacho e as obras situadas dentro do raio selecionado. Obras próximas não são necessariamente obras atribuídas.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como são aplicados os novos filtros geográficos?",
+    "answer": "Os filtros complementares por idade desde despacho, sem levantador e Correção de levantamento usam como ponto de partida o recorte já aplicado pelos filtros operacionais originais. Limpar apenas análise geográfica não apaga os filtros principais.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como usar o mapa de calor?",
+    "answer": "No painel Ferramentas geográficas selecione Obras filtradas ou Em atraso. A modalidade em atraso usa obras elegíveis com mais de 10 dias desde o despacho e coordenadas válidas; a camada é indicativa e não substitui os marcadores existentes.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "O que é exportado para KML e KMZ?",
+    "answer": "Os arquivos contêm obras com coordenadas válidas que atendem ao recorte geográfico complementar e equipes visíveis nos filtros do mapa. Obras sem coordenadas continuam nas contagens, mas não podem ser representadas como pontos reais. KMZ requer a biblioteca JSZip carregada.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como funciona a auditoria geográfica?",
+    "answer": "Ela identifica coordenadas ausentes, inválidas, fora de um retângulo aproximado do Maranhão e coordenadas compartilhadas com arredondamento de cinco casas. Não determina automaticamente o município correto e não modifica a fonte.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que algumas obras não aparecem no mapa mas contam nos indicadores?",
+    "answer": "Registros sem coordenadas válidas ou fora do filtro geográfico podem permanecer nos totais originais. A ferramenta não inventa posições e preserva a contagem oficial da carteira.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como abrir a ficha da equipe pelo bonequinho?",
+    "answer": "Ao clicar no bonequinho do mapa, a ferramenta tenta selecionar o colaborador cadastrado mais próximo daquele ponto e mostra a análise geográfica. Coordenadas de vários colaboradores no mesmo ponto continuam agrupadas no marcador original.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
   }
 ]
