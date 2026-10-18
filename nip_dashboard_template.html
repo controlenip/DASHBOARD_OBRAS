@@ -800,7 +800,7 @@ const panel=document.createElement('div');panel.id='nip-tab-qualidade-list';pane
 const main=document.querySelector('main');main.append(panel);
 panel.innerHTML=`<section class="nip-box"><h2>QUALIDADE LEVANTAMENTO — Retornos para correção</h2>
 <p class="ql-note" id="qlSource"></p><div class="ql-grid" id="qlMetrics"></div>
-<p class="ql-note">A análise considera exclusivamente as linhas com coluna E = CORREÇÃO DE LEVANTAMENTO na BASE_LIST, usando a coluna O (levantador), T (analista de Pré-Análise) e AF (observações). As contagens representam registros encontrados; não são taxa de erro nem medem qualidade relativa sem o total de obras executadas.</p></section>
+<p class="ql-note">A análise considera exclusivamente as linhas com coluna E = CORREÇÃO DE LEVANTAMENTO na BASE_LIST, usando a coluna O (levantador) e AF (observações). Indicadores por analista estão concentrados na aba Pré-Análise. As contagens representam registros encontrados; não são taxa de erro nem medem qualidade relativa sem o total de obras executadas.</p></section>
 <section class="nip-box"><h2>Top 5 levantadores com mais retornos para correção</h2><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Posição</th><th>Levantador</th><th>Obras em correção</th><th>Participação nas correções</th><th>Distribuição</th></tr></thead><tbody id="qlTop"></tbody></table></div></section>
 <section class="nip-box"><h2>Analistas de Pré-Análise — correções e justificativas ausentes</h2>
 <p class="ql-note">A coluna T identifica o analista registrado na BASE_LIST. Isso não comprova, isoladamente, quem alterou o status; para confirmar a autoria da alteração é necessário um histórico de ações. Obras sem analista informado são mostradas separadamente.</p>
@@ -812,7 +812,7 @@ panel.innerHTML=`<section class="nip-box"><h2>QUALIDADE LEVANTAMENTO — Retorno
 <section class="nip-box"><h2>Motivos apontados nas observações</h2><p class="ql-note">Classificação indicativa por palavras-chave, não substitui a leitura técnica da observação original. Uma observação pode conter vários motivos; os totais de motivos podem superar o total de obras.</p>
 <div class="ql-controls"><label>Levantador <select id="qlStaff"></select></label><label>Pesquisar observação <input id="qlSearch" placeholder="Trecho da observação"></label></div>
 <div class="ql-grid" id="qlReasonMetrics"></div><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Motivo identificado</th><th>Ocorrências</th><th>% dos registros selecionados</th></tr></thead><tbody id="qlReasons"></tbody></table></div></section>
-<section class="nip-box"><h2>Observações originais das obras em correção</h2><p class="ql-note">Consulta às descrições originais da coluna AF, preservadas sem edição. Linhas de origem permitem conferência na BASE_LIST.</p><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Linha da BASE_LIST</th><th>Nota</th><th>Levantador</th><th>Analista (T)</th><th>Motivos identificados</th><th>Observação original</th></tr></thead><tbody id="qlRows"></tbody></table></div></section>`;
+<section class="nip-box"><h2>Observações originais das obras em correção</h2><p class="ql-note">Consulta às descrições originais da coluna AF, preservadas sem edição. Linhas de origem permitem conferência na BASE_LIST.</p><div class="ql-scroll"><table class="ql-table"><thead><tr><th>Linha da BASE_LIST</th><th>Nota</th><th>Levantador</th><th>Motivos identificados</th><th>Observação original</th></tr></thead><tbody id="qlRows"></tbody></table></div></section>`;
 const el=id=>document.getElementById(id);
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normal=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
@@ -851,7 +851,7 @@ const reasonsCount=new Map();rows.forEach(r=>reasons(r.observacoes).forEach(reas
 const ordered=[...reasonsCount].sort((a,b)=>b[1]-a[1]);
 el('qlReasonMetrics').innerHTML=`<div class="ql-card"><small>Registros selecionados</small><strong>${rows.length.toLocaleString('pt-BR')}</strong></div><div class="ql-card"><small>Com observações</small><strong>${rows.filter(r=>r.observacoes).length.toLocaleString('pt-BR')}</strong></div>`;
 el('qlReasons').innerHTML=ordered.map(([reason,n])=>`<tr><td>${escape(reason)}</td><td>${n.toLocaleString('pt-BR')}</td><td>${rows.length?(100*n/rows.length).toFixed(1).replace('.',','):0}%</td></tr>`).join('')||'<tr><td colspan="3">Nenhum motivo identificado.</td></tr>';
-el('qlRows').innerHTML=rows.slice(0,300).map(r=>`<tr><td>${r.linha}</td><td>${escape(r.nota||'')}</td><td>${escape(r.levantador)}</td><td>${escape(r.analista||'(Sem analista informado)')}</td><td>${escape(reasons(r.observacoes).join(' · '))}</td><td>${escape(r.observacoes||'(Sem observação)')}</td></tr>`).join('')||'<tr><td colspan="6">Nenhuma observação para os filtros escolhidos.</td></tr>';
+el('qlRows').innerHTML=rows.slice(0,300).map(r=>`<tr><td>${r.linha}</td><td>${escape(r.nota||'')}</td><td>${escape(r.levantador)}</td><td>${escape(reasons(r.observacoes).join(' · '))}</td><td>${escape(r.observacoes||'(Sem observação)')}</td></tr>`).join('')||'<tr><td colspan="5">Nenhuma observação para os filtros escolhidos.</td></tr>';
 }
 el('qlStaff').addEventListener('change',draw);el('qlSearch').addEventListener('input',draw);draw();
 btn.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(x=>x.classList.add('nip-hidden'));panel.classList.remove('nip-hidden');nav.querySelectorAll('button').forEach(x=>x.classList.remove('selected'));btn.classList.add('selected');});
@@ -1223,4 +1223,69 @@ window.nipAIApply=function(action){
    if(found){tab(0);multiSet(s,[found.value],true);}
  }
 };
-</script></body></html>
+</script>
+<style>
+.nip-pre-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:12px 0}.nip-pre-controls label{font-size:12px;font-weight:600;color:#26415b;display:grid;gap:4px}.nip-pre-controls input,.nip-pre-controls select{border:1px solid #abc4d8;border-radius:5px;padding:8px;background:#fff;min-width:155px}.nip-pre-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.nip-pre-card{padding:13px;border:1px solid #d6e4ed;border-radius:8px;background:#eef5f9}.nip-pre-card small{display:block;color:#50697b;font-size:12px}.nip-pre-card strong{font-size:23px;color:#17365d}.nip-pre-table{max-height:420px;overflow:auto}.nip-pre-table table{border-collapse:collapse;width:100%;font-size:12px}.nip-pre-table th{position:sticky;top:0;background:#e7f0f6;text-align:left}.nip-pre-table th,.nip-pre-table td{padding:9px;border-bottom:1px solid #e1e8ed}.nip-pre-note{font-size:12px;color:#587083;line-height:1.5}.nip-pre-actions button{background:#096f7e;color:white;border:0;border-radius:5px;padding:9px 12px;cursor:pointer}
+</style>
+<script>
+(function(){
+'use strict';
+const records=__NIP_PREANALISE_PAYLOAD__;
+const source=__NIP_PREANALISE_STATUS__;
+const nav=document.getElementById('nipNav'),main=document.querySelector('main');
+if(!nav||!main)return;
+const button=document.createElement('button');button.type='button';button.textContent='Pré-Análise';button.dataset.preanalise='1';
+const faq=nav.querySelector('[data-faq]')||[...nav.querySelectorAll('button')].find(x=>/FAQ/i.test(x.textContent));
+if(faq)nav.insertBefore(button,faq);else nav.append(button);
+const panel=document.createElement('div');panel.id='nip-tab-preanalise';panel.className='nip-tab nip-hidden';main.append(panel);
+panel.innerHTML=`<section class="nip-box"><h2>Pré-Análise — Produtividade e tempo de atendimento</h2><p class="nip-pre-note">Fonte: BASE_LIST.xlsx. Q = data de levantamento (campo), U = data de análise, T = analista, E = status atual, C = NOTA SGO. Prazo contado em dias corridos. A coluna E não registra histórico de autoria da mudança de status.</p><p class="nip-pre-note" id="preSource"></p><div class="nip-pre-controls"><label>Período de análise (U)<select id="prePeriod"><option value="day">Dia</option><option value="week">Semana</option><option value="month">Mês</option><option value="all">Todo o histórico</option></select></label><label>Data de referência<input type="date" id="preDate"></label><label>Analista (T)<select id="preAnalyst"><option value="">Todos</option></select></label><label>Status do projeto (E)<select id="preStatus"><option value="">Todos</option></select></label><label>Busca por nota / SGO<input id="preSearch" placeholder="Pesquisar nota ou SGO"></label></div><div id="preCards" class="nip-pre-grid"></div></section>
+<section class="nip-box"><h2>Produção por analista e status atual</h2><p class="nip-pre-note">Contagem das linhas com data U preenchida no período. Status E e analista T são os valores atuais da BASE_LIST.</p><div class="nip-pre-table"><table><thead><tr><th>Analista (T)</th><th>Status atual (E)</th><th>Obras analisadas (U)</th><th>Concluídas com SGO (C)</th><th>Concluídas sem SGO</th></tr></thead><tbody id="preProduction"></tbody></table></div></section>
+<section class="nip-box"><h2>Tempo entre levantamento e análise</h2><p class="nip-pre-note">Para Q e U preenchidas, dias = U − Q. Para Q preenchida e U vazia, dias pendentes = hoje − Q. Datas futuras e intervalos negativos são sinalizados para conferência. O filtro de período U não limita as pendências sem U.</p><div class="nip-pre-table"><table><thead><tr><th>Nota</th><th>NOTA SGO (C)</th><th>Analista</th><th>Status (E)</th><th>Q (campo)</th><th>U (análise)</th><th>Dias</th><th>Situação</th></tr></thead><tbody id="preAging"></tbody></table></div><p id="preDetailCount" class="nip-pre-note"></p></section>
+<section class="nip-box"><h2>Concluídas por analista e NOTA SGO</h2><p class="nip-pre-note">Registros cujo status atual E é CONCLUÍDO. Separação por presença e identificação da NOTA SGO na coluna C.</p><div class="nip-pre-table"><table><thead><tr><th>Analista</th><th>Nota</th><th>NOTA SGO</th><th>Data U</th><th>Status E</th></tr></thead><tbody id="preDone"></tbody></table></div><p id="preDoneCount" class="nip-pre-note"></p><div class="nip-pre-actions"><button type="button" id="preExport">Exportar CSV dos registros filtrados</button></div></section>`;
+// Reuse the original analyst quality calculations, transferring only their visual section.
+// This preserves qlAnalyst* selectors, events, metrics and CSV behavior unchanged.
+const analystQualitySection=document.getElementById('qlAnalystMetrics')?.closest('section');
+if(analystQualitySection){
+  analystQualitySection.setAttribute('data-nip-moved-to','preanalise');
+  analystQualitySection.querySelector('h2').textContent='Pré-Análise — Correções e justificativas ausentes';
+  const productionSection=panel.querySelector('#preProduction')?.closest('section');
+  if(productionSection)panel.insertBefore(analystQualitySection,productionSection);
+  else panel.appendChild(analystQualitySection);
+}
+const get=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=v=>Number(v||0).toLocaleString('pt-BR');
+const norm=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+const isDone=r=>norm(r.status)==='CONCLUIDO';
+const isDate=s=>/^\d{4}-\d{2}-\d{2}$/.test(s||'');
+const dateMs=s=>Date.parse(s+'T12:00:00Z');
+const diff=(a,b)=>Math.round((dateMs(b)-dateMs(a))/86400000);
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const week=s=>{let d=new Date(s+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);return d.toISOString().slice(0,10)};
+const matches=(s,reference,mode)=>mode==='all'||(mode==='day'?s===reference:mode==='month'?s.slice(0,7)===reference.slice(0,7):week(s)===week(reference));
+const names=[...new Set(records.map(r=>r.analista).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+const statuses=[...new Set(records.map(r=>r.status).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+get('preAnalyst').innerHTML='<option value="">Todos</option>'+names.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+get('preStatus').innerHTML='<option value="">Todos</option>'+statuses.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join('');
+get('preSource').textContent=source+' · '+fmt(records.length)+' linhas';
+get('preDate').value=records.map(r=>r.u).filter(isDate).sort().pop()||today();
+function base(){const name=get('preAnalyst').value,status=get('preStatus').value,q=get('preSearch').value.trim().toLowerCase();return records.filter(r=>(!name||r.analista===name)&&(!status||r.status===status)&&(!q||String(r.nota).toLowerCase().includes(q)||String(r.nota_sgo).toLowerCase().includes(q)))}
+function filtered(){const mode=get('prePeriod').value,reference=get('preDate').value;return base().filter(r=>isDate(r.u)&&matches(r.u,reference,mode))}
+function card(title,value){return `<div class="nip-pre-card"><small>${esc(title)}</small><strong>${esc(value)}</strong></div>`}
+function rowTable(id,items,render,cols){get(id).innerHTML=items.length?items.map(render).join(''):`<tr><td colspan="${cols}">Nenhum registro no recorte.</td></tr>`}
+function refresh(){const all=base(),analyzed=filtered(),t=today();const pending=all.filter(r=>isDate(r.q)&&!isDate(r.u));const valid=analyzed.filter(r=>isDate(r.q)&&diff(r.q,r.u)>=0);const times=valid.map(r=>diff(r.q,r.u));const overdue=pending.filter(r=>diff(r.q,t)>0);const done=analyzed.filter(isDone);
+get('preCards').innerHTML=card('Análises no período (U)',fmt(analyzed.length))+card('Analistas com produção',fmt(new Set(analyzed.map(r=>r.analista).filter(Boolean)).size))+card('Média Q → U (dias)',times.length?(times.reduce((a,b)=>a+b,0)/times.length).toLocaleString('pt-BR',{maximumFractionDigits:1}):'—')+card('Pendentes Q sem U',fmt(pending.length))+card('Pendentes há mais de 10 dias',fmt(overdue.filter(r=>diff(r.q,t)>10).length))+card('Concluídas no recorte (E)',fmt(done.length))+card('Concluídas com SGO (C)',fmt(done.filter(r=>r.nota_sgo).length));
+const groups=new Map();for(const r of analyzed){const key=JSON.stringify([r.analista||'(Sem analista)',r.status||'(Sem status)']);let g=groups.get(key);if(!g){g={name:r.analista||'(Sem analista)',status:r.status||'(Sem status)',count:0,withSgo:0,withoutSgo:0};groups.set(key,g)}g.count++;if(isDone(r)){if(r.nota_sgo)g.withSgo++;else g.withoutSgo++}}
+const production=[...groups.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'pt-BR'));rowTable('preProduction',production,g=>`<tr><td>${esc(g.name)}</td><td>${esc(g.status)}</td><td>${fmt(g.count)}</td><td>${fmt(g.withSgo)}</td><td>${fmt(g.withoutSgo)}</td></tr>`,5);
+const aging=all.filter(r=>isDate(r.q)&&(isDate(r.u)?matches(r.u,get('preDate').value,get('prePeriod').value):true)).map(r=>{let days=isDate(r.u)?diff(r.q,r.u):diff(r.q,t);let state=isDate(r.u)?(days<0?'Datas inconsistentes':'Analisada'):(days<0?'Data Q futura':'Pendente');return {...r,days,state}}).sort((a,b)=>(a.state==='Pendente'?0:1)-(b.state==='Pendente'?0:1)||b.days-a.days);
+rowTable('preAging',aging.slice(0,400),r=>`<tr><td>${esc(r.nota)}</td><td>${esc(r.nota_sgo)}</td><td>${esc(r.analista)}</td><td>${esc(r.status)}</td><td>${esc(r.q)}</td><td>${esc(r.u)}</td><td>${fmt(r.days)}</td><td>${esc(r.state)}</td></tr>`,8);get('preDetailCount').textContent=`${fmt(aging.length)} registros no detalhamento; exibindo até 400.`;
+rowTable('preDone',done.slice(0,400),r=>`<tr><td>${esc(r.analista)}</td><td>${esc(r.nota)}</td><td>${esc(r.nota_sgo||'(Sem SGO)')}</td><td>${esc(r.u)}</td><td>${esc(r.status)}</td></tr>`,5);get('preDoneCount').textContent=`${fmt(done.length)} concluídas no recorte; exibindo até 400.`;
+}
+for(const id of ['prePeriod','preDate','preAnalyst','preStatus'])get(id).addEventListener('change',refresh);get('preSearch').addEventListener('input',refresh);
+get('preExport').addEventListener('click',()=>{const fields=['linha','nota','nota_sgo','analista','status','q','u'];const csv=[fields.join(';'),...filtered().map(r=>fields.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(';'))].join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='nip_pre_analise.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)});
+button.addEventListener('click',()=>{document.querySelectorAll('.nip-tab').forEach(p=>p.classList.add('nip-hidden'));panel.classList.remove('nip-hidden');nav.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));button.classList.add('selected');refresh()});
+nav.addEventListener('click',e=>{if(e.target.closest('button')!==button){panel.classList.add('nip-hidden');button.classList.remove('selected')}});
+refresh();
+})();
+</script>
+</body></html>
