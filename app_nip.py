@@ -397,8 +397,57 @@ def admin_sidebar():
         if not GITHUB_TOKEN:st.info('A publicação compartilhada está indisponível. Solicite a configuração ao administrador do sistema.')
 
 
+@st.dialog("NIP IA — Assistente operacional", width="large")
+def nip_ai_dialog():
+    st.caption("Consultas somente leitura. A localização residencial não define o responsável pela obra.")
+    key = str(setting('OPENAI_API_KEY')).strip()
+    if not key:
+        st.warning('Configure OPENAI_API_KEY nos Secrets do Streamlit.')
+        return
+    for item in st.session_state.get('nip_ai_history', []):
+        with st.chat_message(item['role']):
+            st.markdown(item['content'])
+    question = st.chat_input('Pergunte sobre notas, regionais, prazos ou residências...')
+    if question:
+        st.session_state.setdefault('nip_ai_history', []).append({'role':'user','content':question})
+        try:
+            from nip_ai import ask
+            blob, _ = get_shared_base()
+            df = pd.read_json(io.StringIO(parse_notas(blob)[0]), orient='records', dtype=False)
+            local_blob = get_shared_localidade()
+            people = json.loads(parse_localidade(local_blob)) if local_blob else []
+            with st.spinner('Consultando as bases...'):
+                answer, action = ask(question, df, people, key, str(setting('OPENAI_MODEL','gpt-4.1-mini')))
+            st.session_state['nip_ai_history'].append({'role':'assistant','content':answer})
+            if action:
+                st.session_state['nip_ai_pending_action'] = action
+        except Exception as exc:
+            st.session_state['nip_ai_history'].append({'role':'assistant','content':'Não foi possível concluir a consulta. Verifique a configuração da API e os logs do aplicativo.'})
+        st.rerun()
+    if st.session_state.get('nip_ai_pending_action'):
+        st.info('Ação visual sugerida: ' + json.dumps(st.session_state['nip_ai_pending_action'], ensure_ascii=False))
+        st.caption('Nesta integração conservadora, a ação ainda não é aplicada automaticamente ao mapa. Execute o filtro na interface existente.')
+        if st.button('Dispensar ação', key='nip_ai_dismiss'):
+            st.session_state.pop('nip_ai_pending_action', None)
+            st.rerun()
+    if st.button('Limpar conversa', key='nip_ai_clear'):
+        st.session_state.pop('nip_ai_history', None)
+        st.session_state.pop('nip_ai_pending_action', None)
+        st.rerun()
+
+
+def nip_ai_launcher():
+    st.markdown("""<style>
+    .st-key-nip_ai_open {position:fixed!important;bottom:18px!important;right:18px!important;z-index:999999!important;width:auto!important;}
+    .st-key-nip_ai_open button {background:#123653!important;color:white!important;border-radius:22px!important;border:1px solid #0f766e!important;box-shadow:0 4px 16px #0005!important;}
+    </style>""", unsafe_allow_html=True)
+    if st.button('🤖 NIP IA', key='nip_ai_open'):
+        nip_ai_dialog()
+
+
 def main():
     admin_sidebar()
+    nip_ai_launcher()
     try:
         blob,source=get_shared_base()
         payload,count=parse_notas(blob)
