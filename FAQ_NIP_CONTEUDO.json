@@ -2,7 +2,7 @@
   {
     "category": "Primeiros passos",
     "question": "Como começar a usar o dashboard?",
-    "answer": "Abra Visão geral para indicadores e mapa; use os filtros de município, regional, status e levantador. Em Levantadores consulte a carga das equipes; em Prazos e prioridades, os vencimentos e atrasos; em Relatórios, tabelas e exportações. As abas Qualidade Levantamento e Produtividade utilizam indicadores complementares da BASE_LIST.",
+    "answer": "Comece pela Visão Geral; consulte a carga em Levantadores, atrasos em Prazos e Prioridades, produção de campo em Produtividade, análise de escritório em Pré-Análise, correções em Qualidade Levantamento e exportações em Relatórios. Use os quadros complementares para interpretar as contagens.",
     "tab": "Visão geral",
     "keywords": "inicio navegar usar dashboard menu"
   },
@@ -247,7 +247,7 @@
   {
     "category": "Dados e privacidade",
     "question": "O assistente FAQ consulta informações em tempo real?",
-    "answer": "A busca responde com base neste manual de funcionamento e não consulta automaticamente as contagens atuais, notas individuais, banco de dados ou serviços externos. Para valores exatos, abra a aba correspondente. Quando uma pergunta não estiver coberta, o assistente deve informar a limitação.",
+    "answer": "O FAQ é um manual local de consulta, não um agente de IA. Não consulta automaticamente as notas atuais nem serviços externos. Para contagens, utilize os indicadores das abas.",
     "tab": "FAQ / Dúvidas",
     "keywords": "ia perguntas tempo real inteligencia"
   },
@@ -257,5 +257,103 @@
     "answer": "Localize a nota no painel, confira colunas de origem e filtros, e valide a regra de contagem no manual. Os painéis não devem alterar automaticamente planilhas oficiais. Se houver diferença, registre exemplo concreto de nota, período e filtros utilizados.",
     "tab": "FAQ / Dúvidas",
     "keywords": "erros suporte discrepancias"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Como usar os novos painéis complementares?",
+    "answer": "Os novos quadros explicam indicadores já existentes e acrescentam recortes de conferência. Não modificam o status, a distribuição de obras ou os dados de origem. Os totais de registros e de notas distintas podem ser diferentes.",
+    "tab": "Visão geral",
+    "keywords": "indicadores filtros navegação"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Como saber quais filtros estão aplicados?",
+    "answer": "Consulte o resumo de filtros operacionais da Visão Geral. Os filtros locais das outras abas são independentes e indicados nos respectivos quadros.",
+    "tab": "Visão geral",
+    "keywords": "filtros ativos"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como interpretar obras sem coordenadas?",
+    "answer": "Uma obra sem latitude e longitude válidas continua no total da carteira, mas não aparece como marcador geográfico. O percentual de cobertura utiliza o total de registros da base como denominador.",
+    "tab": "Visão geral",
+    "keywords": "coordenadas cobertura mapa"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Carga atribuída é o mesmo que produção?",
+    "answer": "Não. Carga é o estoque de obras associado ao levantador na base operacional. Produção de campo usa a data do levantamento (coluna Q) da BASE_LIST. As duas medidas podem ter universos distintos.",
+    "tab": "Levantadores",
+    "keywords": "carga produção"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Os alertas de prazo mostram o histórico de movimentações?",
+    "answer": "Não. A idade de despacho é calculada com a data atual e a data de despacho disponível. Sem registros históricos de status, o painel não prova que a obra permaneceu totalmente parada.",
+    "tab": "Prazos e prioridades",
+    "keywords": "atrasos prazos histórico"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como conferir um relatório exportado?",
+    "answer": "Verifique o período, os filtros, o tipo de base, a data de referência e a diferença entre linhas e notas distintas. O modelo complementar exporta CSV com cabeçalho e critérios.",
+    "tab": "Relatórios",
+    "keywords": "exportar csv conferência"
+  },
+  {
+    "category": "Qualidade",
+    "question": "Qual a diferença entre quantidade e taxa de correção?",
+    "answer": "Quantidade é o número de registros em correção. Taxa requer um denominador consistente de obras levantadas no mesmo recorte; sem essa compatibilidade, não se deve comparar percentuais entre colaboradores.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "taxa retrabalho correção"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como comparar dois períodos de produção?",
+    "answer": "Selecione a referência de campo (Q) e o período desejado. Os novos quadros exibem tendência diária e comparação com janela anterior equivalente em dias corridos, não dias úteis.",
+    "tab": "Produtividade",
+    "keywords": "comparativo produção períodos"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Qual a diferença entre produção de campo e análise?",
+    "answer": "Produção de campo utiliza a data do levantamento (Q). A data U registra a análise de levantamento no escritório e deve ser consultada na Pré-Análise.",
+    "tab": "Produtividade",
+    "keywords": "coluna q coluna u"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que são entradas, saídas e fila de Pré-Análise?",
+    "answer": "Entrada é Q preenchida; saída registrada é U preenchida. A fila atual contém Q preenchida e U vazia. Entradas e saídas em um período podem representar obras diferentes.",
+    "tab": "Pré-Análise",
+    "keywords": "fila entradas saidas q u"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como é calculado o tempo de Pré-Análise?",
+    "answer": "Para registros com Q e U válidas, tempo = U menos Q em dias corridos. Para pendências com Q e U vazia, espera = data atual menos Q. Datas invertidas ou futuras são destacadas para conferência.",
+    "tab": "Pré-Análise",
+    "keywords": "tempo espera datas"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O analista da coluna T é quem mudou o status?",
+    "answer": "A coluna T informa o analista associado ao registro. A coluna E mostra o status atual. Sem histórico de ações não é possível atribuir com certeza a autoria da mudança de status.",
+    "tab": "Pré-Análise",
+    "keywords": "analista status autoria"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como funciona o calendário de Pré-Análise?",
+    "answer": "No calendário, selecione o modo Recebidas do campo (Q) ou Analisadas (U), navegue entre meses e clique em um dia para conferir o detalhamento. O filtro de analista e status atual permanece aplicado.",
+    "tab": "Pré-Análise",
+    "keywords": "calendário pré análise"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O dashboard possui agente de inteligência artificial?",
+    "answer": "Não. A opção NIP IA foi removida. Os painéis e o FAQ usam cálculos locais e não precisam de créditos de API para funcionar.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "sem ia api"
   }
 ]

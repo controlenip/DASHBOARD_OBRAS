@@ -1,0 +1,10 @@
+NIP — Atualização de todas as abas e FAQ
+
+1. Faça backup do repositório e, preferencialmente, crie uma cópia de testes do Streamlit.
+2. Substitua app_nip.py e nip_dashboard_template.html pelos arquivos deste pacote.
+3. Substitua FAQ_NIP_CONTEUDO.json se desejar manter o arquivo documental sincronizado. O FAQ exibido pelo HTML já está atualizado.
+4. Mantenha BASE_LIST.xlsx, BASE_LEVANTAMENTO_ATUALIZADA.xlsx, LOCALIDADE LEVANTADORES-SANEAMENTO.xlsx, nip_analytics.py, logo e secrets existentes.
+5. Não inclua nip_ai.py: esta versão não depende de IA.
+6. Confira contagens e navegação nas oito abas; verifique os logs do Streamlit antes de atualizar produção.
+
+Os quadros adicionados são complementares e NÃO substituem KPIs e filtros originais. As métricas de atraso são calculadas a partir das datas disponíveis, sem inferir histórico de movimentação.
