@@ -1204,4 +1204,23 @@ renderCategories();renderArticles();
  for(const id of ['reset','nipClearMap'])document.getElementById(id)?.addEventListener('click',()=>{document.getElementById('nipStaffTeamFilter').value='all';document.getElementById('nipStaffMapFilter').value='all';draw()});
  draw();
 })();
+</script><script>
+// NIP IA: strictly allowlisted map actions, no base mutation.
+window.nipAIApply=function(action){
+ if(!action||typeof action!=='object')return;
+ if(action.type==='clear'){
+   const clear=document.getElementById('clear');if(clear)clear.click();
+   else {document.getElementById('q').value='';for(const field of Object.keys(sel))multiSet(sel[field],[],false);render();}
+ } else if(action.type==='note'){
+   const note=String(action.value||'').toLowerCase();
+   const r=DATA.find(x=>['ID SISCO','PROTOCOLO','SGO','Nº SGO','N° SGO'].some(k=>String(x[k]??'').toLowerCase()===note));
+   if(r)goToNote(r);
+ } else if(action.type==='filter'){
+   const allowed=['REGIONAL','MUNICIPIO','LEVANTADOR','STATUS SAP','STATUS SISCO','STATUS LIST','TIPO NOTA','CONTRATO'];
+   if(!allowed.includes(action.field))return;
+   const s=sel[action.field];if(!s)return;
+   const found=[...s.options].find(o=>o.value.toLowerCase()===String(action.value).toLowerCase());
+   if(found){tab(0);multiSet(s,[found.value],true);}
+ }
+};
 </script></body></html>
