@@ -1,18 +1,21 @@
-DASHBOARD NIP - ESTRUTURA MULTIPAGINAS
+CORRECAO - RESTAURACAO DO LAYOUT ORIGINAL DO DASHBOARD NIP
 
-1. Faça backup do repositório antes de substituir os arquivos.
-2. Envie app_nip.py, nip_shared.py, nip_analytics.py, nip_dashboard_template.html e requirements.txt para a raiz.
-3. Envie os oito arquivos .py para a pasta pages/.
-4. Preserve as planilhas BASE_LEVANTAMENTO_ATUALIZADA.xlsx, BASE_LIST.xlsx e LOCALIDADE LEVANTADORES-SANEAMENTO.xlsx e os Secrets ADMIN_PASSWORD/GITHUB_TOKEN/GITHUB_REPO/GITHUB_BRANCH.
-5. Configure o Streamlit para iniciar por app_nip.py e reinicie o aplicativo.
-6. Navegue pelo menu Streamlit na lateral. O filtro de pesquisa e as datas globais sao preservados localmente no navegador quando o armazenamento do iframe permite.
+Substitua no GitHub: app_nip.py, nip_shared.py, nip_dashboard_template.html,
+FAQ_NIP_CONTEUDO.json e todos os arquivos da pasta pages/.
+Mantenha as planilhas, nip_analytics.py e Secrets existentes.
 
-ARQUITETURA
-- app_nip.py: menu e roteamento nativo Streamlit (st.navigation/st.Page).
-- pages/*.py: um arquivo por aba, com chamada especifica ao renderizador comum.
-- nip_shared.py: carregamento/caching de dados, validacoes, publicacao administrativa e injetor HTML.
-- nip_dashboard_template.html: motor HTML/JavaScript existente, preservado como uma base comum.
-- nip_analytics.py: analises da BASE_LIST.
+CORRIGIDO:
+- Menu lateral nativo Streamlit oculto; voltam as abas horizontais originais.
+- HTML, CSS e JS originais preservados, com logo, mapa, cores e filtros.
+- Escape dos dados das planilhas antes de inseri-los em scripts HTML.
+- Cada uma das oito paginas continua tendo seu arquivo Python e URL de acesso.
 
-ATENCAO
-Esta e uma modularizacao das entradas Streamlit; as oito paginas ainda usam o mesmo motor HTML/JS de forma compartilhada, para nao reproduzir nem alterar as formulas existentes. Nao e ainda uma migracao total de cada grafico para Python nativo; as paginas carregam os scripts comuns e exibem apenas sua aba. Parte da navegacao cruzada interna do HTML pode continuar abrindo secoes na mesma pagina. A persistencia dos filtros depende das permissoes do navegador. Teste todos os fluxos, com especial atencao aos filtros, mapas e exportacoes, antes de publicar em producao.
+LIMITACAO ARQUITETURAL:
+As abas horizontais continuam funcionando no HTML compartilhado, sem necessariamente
+alterar a URL Streamlit. O motor JavaScript ainda e comum as oito paginas.
+Para uma separacao real dos graficos por pagina sera necessario refatorar o HTML
+por componentes e validar a comunicacao entre paginas. Esta versao prioriza
+restaurar a aparencia e o funcionamento existentes.
+
+TESTES: validacao sintatica dos arquivos Python e scripts JS do template.
+A verificacao completa em Streamlit com bases reais deve ser feita em branch de teste.

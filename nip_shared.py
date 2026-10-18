@@ -438,8 +438,8 @@ def render_page(page_id: str):
             raise ValueError('Template visual inválido: marcador da base ausente ou duplicado.')
         # Inject the shared Excel directly into the ORIGINAL HTML/JS implementation.
         # Escape </script> and HTML specials so spreadsheet cell text cannot break out.
-        payload=(payload.replace('<','\u003c').replace('>','\u003e')
-                 .replace('&','\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
+        payload=(payload.replace('<','\\u003c').replace('>','\\u003e')
+                 .replace('&','\\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
         html=template.replace('__NIP_DATA_PAYLOAD__',payload)
         if template.count('__NIP_LOCALIDADE_PAYLOAD__') != 1:
             raise ValueError('Marcador de localidade ausente ou duplicado no HTML.')
@@ -482,22 +482,22 @@ def render_page(page_id: str):
             productivity_status=list_status
         if template.count('__NIP_LIST_PAYLOAD__')!=1 or template.count('__NIP_LIST_STATUS__')!=1:
             raise ValueError('Template de qualidade inválido: marcador BASE_LIST ausente ou duplicado.')
-        safe_list=(list_payload.replace('<','\u003c').replace('>','\u003e')
-                   .replace('&','\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
+        safe_list=(list_payload.replace('<','\\u003c').replace('>','\\u003e')
+                   .replace('&','\\u0026').replace('\u2028','\\u2028').replace('\u2029','\\u2029'))
         html=html.replace('__NIP_LIST_PAYLOAD__',safe_list)
         html=html.replace('__NIP_LIST_STATUS__',json.dumps(list_status,ensure_ascii=False))
         if template.count('__NIP_PRODUCTIVITY_PAYLOAD__')!=1 or template.count('__NIP_PRODUCTIVITY_STATUS__')!=1:
             raise ValueError('Template de produtividade inválido: marcador ausente ou duplicado.')
-        safe_productivity=(productivity_payload.replace('<','\u003c').replace('>','\u003e').replace('&','\u0026'))
+        safe_productivity=(productivity_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026'))
         html=html.replace('__NIP_PRODUCTIVITY_PAYLOAD__',safe_productivity)
         html=html.replace('__NIP_PRODUCTIVITY_STATUS__',json.dumps(productivity_status,ensure_ascii=False))
         if template.count('__NIP_ANALYTICS_PAYLOAD__')!=1:
             raise ValueError('Marcador da analise integrada ausente ou duplicado.')
-        safe_analytics=analytics_payload.replace('<','\u003c').replace('>','\u003e').replace('&','\u0026')
+        safe_analytics=analytics_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
         html=html.replace('__NIP_ANALYTICS_PAYLOAD__',safe_analytics)
         if template.count('__NIP_PREANALISE_PAYLOAD__')!=1 or template.count('__NIP_PREANALISE_STATUS__')!=1:
             raise ValueError('Marcador de Pré-Análise ausente ou duplicado no HTML.')
-        safe_preanalise=(preanalise_payload.replace('<','\u003c').replace('>','\u003e').replace('&','\u0026'))
+        safe_preanalise=(preanalise_payload.replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026'))
         html=html.replace('__NIP_PREANALISE_PAYLOAD__',safe_preanalise)
         html=html.replace('__NIP_PREANALISE_STATUS__',json.dumps(preanalise_status,ensure_ascii=False))
         html=html.replace('Base incorporada •','')
@@ -515,10 +515,39 @@ def render_page(page_id: str):
 
 
 
-_PAGE_CONTROLLER = "<style>\n#nipNav{display:none!important}\n/* Native Streamlit multipage navigation replaces the old horizontal tab list. */\n.nip-person-marker svg{display:block}\n</style>\n<script>\n(function(){\n const target=__TARGET__;\n const approved=new Set(['geral','equipe','prazos','relatorios','qualidade-list','produtividade','preanalise','faq']);\n if(!approved.has(target))return;\n function enter(){\n   const dest=document.getElementById('nip-tab-'+target);\n   if(!dest)return false;\n   document.querySelectorAll('.nip-tab').forEach(el=>{\n     const active=el===dest;\n     el.classList.toggle('nip-hidden',!active);\n     el.style.setProperty('display',active?'block':'none','important');\n   });\n   document.getElementById('nipNav')?.style.setProperty('display','none','important');\n   if(target==='geral'&&typeof map!=='undefined'&&map?.invalidateSize){\n     setTimeout(()=>map.invalidateSize(),100);\n   }\n   const sc=document.querySelector('main');if(sc)sc.scrollTop=0;\n   return true;\n }\n // Restore only portable global operational search/date/checkbox fields across pages.\n const STORE='nip_shared_filters_v1';\n const globalIds=['q','from','to','noCoord','noName'];\n function load(){\n   let saved={};try{saved=JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){}\n   for(const id of globalIds){\n     const el=document.getElementById(id);if(!el||!(id in saved))continue;\n     if(el.type==='checkbox'){el.checked=!!saved[id]}else{el.value=String(saved[id]||'')}\n     el.dispatchEvent(new Event('change',{bubbles:true}));\n     if(id==='q')el.dispatchEvent(new Event('input',{bubbles:true}));\n   }\n }\n function save(){\n   const snapshot={};for(const id of globalIds){const el=document.getElementById(id);if(!el)continue;snapshot[id]=el.type==='checkbox'?el.checked:el.value}\n   try{localStorage.setItem(STORE,JSON.stringify(snapshot))}catch(e){}\n }\n window.addEventListener('load',()=>{\n   load();enter();\n   globalIds.forEach(id=>document.getElementById(id)?.addEventListener('change',save));\n   document.getElementById('q')?.addEventListener('input',save);\n   document.getElementById('reset')?.addEventListener('click',()=>{try{localStorage.removeItem(STORE)}catch(e){} });\n   setTimeout(enter,160);\n });\n})();\n</script>"
+# Only activate the requested tab on initial load. Never hide the original
+# horizontal navigation or override the original dashboard CSS.
+_PAGE_TABS = {
+    'geral': 'nip-tab-geral',
+    'equipe': 'nip-tab-equipe',
+    'prazos': 'nip-tab-prazos',
+    'relatorios': 'nip-tab-relatorios',
+    'qualidade-list': 'nip-tab-qualidade-list',
+    'produtividade': 'nip-tab-produtividade',
+    'preanalise': 'nip-tab-preanalise',
+    'faq': 'nip-tab-faq',
+}
 
 def add_page_controller(html: str, page_id: str) -> str:
-    if page_id not in {"geral", "equipe", "prazos", "relatorios", "qualidade-list", "produtividade", "preanalise", "faq"}:
-        raise ValueError("Página não reconhecida: " + page_id)
-    marker = _PAGE_CONTROLLER.replace("__TARGET__", json.dumps(page_id))
-    return html.replace("</body>", marker + "</body>", 1)
+    if page_id not in _PAGE_TABS:
+        raise ValueError('Página não reconhecida: ' + page_id)
+    # The default route uses the untouched original tab selection.
+    if page_id == 'geral':
+        return html
+    tab = json.dumps(_PAGE_TABS[page_id])
+    js = """<script>
+window.addEventListener('load', function(){
+  const target = document.getElementById(__TAB__);
+  if (!target) return;
+  document.querySelectorAll('.nip-tab').forEach(function(p){
+    p.classList.toggle('nip-hidden', p !== target);
+  });
+  const nav = document.getElementById('nipNav');
+  if(nav){
+    nav.querySelectorAll('button').forEach(function(b){
+      b.classList.toggle('selected', b.getAttribute('data-target') === __TAB__);
+    });
+  }
+}, {once:true});
+</script>""".replace('__TAB__', tab)
+    return html.replace('</body>', js+'</body>', 1)
