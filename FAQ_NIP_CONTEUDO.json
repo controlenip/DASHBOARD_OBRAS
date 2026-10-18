@@ -301,7 +301,7 @@
     "keywords": "exportar csv conferência"
   },
   {
-    "category": "Qualidade",
+    "category": "Qualidade Levantamento",
     "question": "Qual a diferença entre quantidade e taxa de correção?",
     "answer": "Quantidade é o número de registros em correção. Taxa requer um denominador consistente de obras levantadas no mesmo recorte; sem essa compatibilidade, não se deve comparar percentuais entre colaboradores.",
     "tab": "Qualidade Levantamento",

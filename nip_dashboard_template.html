@@ -14,6 +14,9 @@
 
 /* Filtros multisselecao independentes, sem alterar estrutura dos mapas */
 .nip-multi-wrap{position:relative}.nip-multi-button{width:100%;border:1px solid #cddce6;background:#fff;color:#1c3144;border-radius:4px;text-align:left;font:inherit;padding:8px 25px 8px 9px;min-height:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}.nip-multi-button:after{content:'▾';position:absolute;right:9px;top:8px}.nip-multi-panel{position:relative;z-index:3000;background:white;border:1px solid #9bb8c8;border-radius:6px;padding:8px;box-shadow:0 7px 20px #163b5033;margin-top:4px}.nip-multi-panel[hidden]{display:none!important}.nip-multi-search{width:100%;padding:7px!important;font:inherit}.nip-multi-actions{display:flex;gap:5px;margin:7px 0}.nip-multi-actions button,.nip-multi-footer button{background:#eaf2f6;color:#15526a;font:inherit;font-size:11px;padding:6px 7px}.nip-multi-options{max-height:205px;overflow-y:auto}.nip-multi-options label{display:flex;align-items:flex-start;gap:5px;margin:0!important;padding:6px 3px;font-size:12px!important;color:#24465a!important;font-weight:normal!important;cursor:pointer}.nip-multi-options label:hover{background:#eef5f8}.nip-multi-options input{margin:1px 0;flex-shrink:0}.nip-multi-footer{text-align:right;margin-top:6px}.nip-multi-footer button{background:#116e7a;color:white}.nip-multi-field{min-width:0}
+
+.nip-person-marker{background:transparent;border:none;}
+.nip-person-marker svg{display:block;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));}
 </style><style>
 .brand{display:flex;align-items:center;gap:17px}.nip-logo{width:142px;max-height:61px;object-fit:contain;background:white;padding:5px 9px;border-radius:5px}.aging{background:#fff;margin:0 12px 15px;padding:18px;border-radius:7px;border-top:4px solid #73c82c}.aging h2{margin:0 0 6px;color:#143b54;font-size:19px}.aging h3{font-size:15px;color:#153d57;margin:21px 0 10px}.aging h4{font-size:13px;color:#153d57;margin:0 0 8px}.aging p{font-size:12px;line-height:1.5;color:#536d7b}.aging-title{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.today{white-space:nowrap;font-size:12px;color:#146374;background:#edf7f7;padding:8px;border-radius:5px}.aging-cards{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:9px;margin:14px 0}.aging-cards>div{padding:12px;background:#f0f5f8;border-radius:5px;border-bottom:3px solid #76bf3a}.aging-cards span{font-size:11px;color:#5a7181;display:block}.aging-cards strong{font-size:23px;color:#143b54;display:block;margin-top:6px}.aging-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.aging-grid article{border:1px solid #dbe6ed;border-radius:6px;padding:12px;min-width:0}.aging-bars{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid #edf1f5;font-size:12px}.aging-bars span{word-break:break-word}.aging-bars b{white-space:nowrap;color:#13455f}.aging-scroll{overflow:auto;max-height:460px;border:1px solid #dbe6ed;border-radius:6px}.aging-table{width:100%;border-collapse:collapse;font-size:12px}.aging-table th{position:sticky;top:0;background:#153b54;color:white;padding:10px;text-align:left;white-space:nowrap}.aging-table td{border-bottom:1px solid #e3e9ee;padding:9px 10px}.aging-table tbody tr:hover{background:#edf8f7;cursor:pointer}.aging-hint{font-size:11px!important;color:#5d7583!important}.aging-table .days{font-weight:700;color:#ae4b12}@media(max-width:1050px){.aging-cards{grid-template-columns:repeat(3,1fr)}.aging-grid{grid-template-columns:1fr}}@media(max-width:600px){.aging-cards{grid-template-columns:repeat(2,1fr)}.aging-title{display:block}.brand{gap:7px}.nip-logo{width:95px}}
 </style><style>
@@ -1192,7 +1195,28 @@ renderCategories();renderArticles();
  const residentialLegend=document.createElement('div');
  residentialLegend.className='notice';
  residentialLegend.style.cssText='display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:5px 0 10px';
- residentialLegend.innerHTML='<b>Residências:</b> <span><span style="color:#6D28D9">●</span> Levantamento</span> <span><span style="color:#C2410C">●</span> Saneamento</span> <span><span style="color:#0F766E">●</span> Ambas</span>';
+ function personSvg(color,count){
+   const badge=count>1
+     ? '<circle cx="33" cy="7" r="7" fill="#ffffff" stroke="'+color+'" stroke-width="1.5"></circle><text x="33" y="10" text-anchor="middle" font-size="8" font-family="Arial, sans-serif" font-weight="700" fill="'+color+'">'+String(Math.min(count,99))+'</text>'
+     : '';
+   return '<svg xmlns="http://www.w3.org/2000/svg" width="34" height="48" viewBox="0 0 34 48" aria-hidden="true">'
+     + '<circle cx="17" cy="7" r="7" fill="'+color+'"></circle>'
+     + '<rect x="10" y="15" width="14" height="17" rx="4" fill="'+color+'"></rect>'
+     + '<rect x="6" y="17" width="4" height="16" rx="1.8" fill="'+color+'"></rect>'
+     + '<rect x="24" y="17" width="4" height="16" rx="1.8" fill="'+color+'"></rect>'
+     + '<rect x="12" y="31" width="4.5" height="16" rx="1.8" fill="'+color+'"></rect>'
+     + '<rect x="17.5" y="31" width="4.5" height="16" rx="1.8" fill="'+color+'"></rect>'
+     + badge
+     + '</svg>';
+ }
+ function personLegend(color){
+   return '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:18px;vertical-align:middle">'+personSvg(color,1).replace('width="34" height="48"','width="14" height="18"')+'</span>';
+ }
+ function personIcon(color,count){
+   const size=count>1?[34,48]:[30,44];
+   return L.divIcon({className:'nip-person-marker',html:personSvg(color,count),iconSize:size,iconAnchor:[size[0]/2,size[1]-2],popupAnchor:[0,-size[1]+8]});
+ }
+ residentialLegend.innerHTML='<b>Residências:</b> <span style="display:inline-flex;align-items:center;gap:6px">'+personLegend('#6D28D9')+'Levantamento</span> <span style="display:inline-flex;align-items:center;gap:6px">'+personLegend('#C2410C')+'Saneamento</span> <span style="display:inline-flex;align-items:center;gap:6px">'+personLegend('#0F766E')+'Ambas</span>';
  layer.appendChild(residentialLegend);
  const group=L.layerGroup().addTo(map);
  // Coordenadas residenciais iguais formam somente um marcador e um card.
@@ -1214,7 +1238,7 @@ renderCategories();renderArticles();
      const members=location.members.sort((x,y)=>String(x.nome).localeCompare(String(y.nome),'pt-BR'));
      const teams=new Set(members.map(p=>p.equipe));
      const color=teams.size>1?'#0F766E':teams.has('Levantamento')?'#6D28D9':'#C2410C';
-     const marker=L.circleMarker([location.lat,location.lon],{radius:members.length>1?9:7,color,weight:2,fillOpacity:.85});
+     const marker=L.marker([location.lat,location.lon],{icon:personIcon(color,members.length)});
      const title=members.length===1?esc(members[0].nome):members.length+' colaboradores no mesmo local';
      const detail=members.map(p=>'<div class="info"><span>'+esc(p.equipe)+'</span><b>'+esc(p.nome)+'</b></div>').join('');
      const cities=[...new Set(members.map(p=>p.cidade).filter(Boolean))].map(esc).join(' / ');
