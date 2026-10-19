@@ -1,0 +1,625 @@
+[
+  {
+    "category": "Primeiros passos",
+    "question": "Como começar a usar o dashboard?",
+    "answer": "Use o menu lateral do Streamlit para abrir uma das oito páginas: Visão Geral, Levantadores, Prazos e Prioridades, Relatórios, Qualidade de Levantamento, Produtividade, Pré-Análise e FAQ / Dúvidas. Todas utilizam os mesmos arquivos de dados carregados pelo módulo compartilhado. Cada página apresenta seus próprios filtros e indicadores.",
+    "tab": "Visão geral",
+    "keywords": "inicio navegar usar dashboard menu"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como funcionam os filtros da visão geral?",
+    "answer": "Os filtros da barra lateral restringem os registros utilizados pelo mapa e pelos indicadores compatíveis. A seleção pode combinar regional, município, status, contrato, levantador e datas, conforme os controles presentes. Na estrutura multipáginas, alguns campos globais são persistidos no navegador, mas os filtros internos de cada página podem ser independentes.",
+    "tab": "Visão geral",
+    "keywords": "filtros regional municipio status múltiplos"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que nem todas as obras aparecem no mapa?",
+    "answer": "Uma nota pode não ter coordenadas válidas, estar fora do limite geográfico ou não corresponder aos filtros ativos. O agrupamento de marcadores pode representar várias obras no mesmo ponto. Compare o total filtrado com as notas sem coordenadas nos indicadores de dados disponíveis.",
+    "tab": "Visão geral",
+    "keywords": "mapa pontos ausentes marcadores coordenadas"
+  },
+  {
+    "category": "Visão geral",
+    "question": "O que significam as cores dos marcadores?",
+    "answer": "As cores dos pontos das obras indicam a classificação exibida na legenda. As equipes residenciais são identificadas por bonequinhos: roxo para Levantamento, laranja para Saneamento e verde-petróleo para ambas no mesmo ponto. Os bonequinhos não exibem contador numérico; quando várias pessoas compartilham coordenadas, seus nomes continuam no popup do marcador.",
+    "tab": "Visão geral",
+    "keywords": "cores legenda pinos status finl canc azul amarelo"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como consultar uma nota específica?",
+    "answer": "Na Visão Geral, use a pesquisa operacional na barra lateral, digitando nota, cliente ou endereço conforme os campos disponíveis. A caixa adicional de busca com tabela de resultados foi retirada do painel; ela não deve ser confundida com a pesquisa dos filtros.",
+    "tab": "Visão geral",
+    "keywords": "pesquisa nota sisco protocolo"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como limpar o mapa e os filtros?",
+    "answer": "Use Limpar filtros na barra lateral e os controles próprios do mapa, quando disponíveis. Na versão multipáginas, a pesquisa global, as datas e as caixas de seleção principais podem ser recuperadas ao trocar de página no mesmo navegador; revise os filtros ao abrir outra página.",
+    "tab": "Visão geral",
+    "keywords": "limpar zerar resetar filtros"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Como é calculada a carga de obras por levantador?",
+    "answer": "A carga segue regras operacionais próprias da base NOTAS, incluindo critérios de STATUS LIST, STATUS SAP e os controles já existentes sobre a coluna M. Os indicadores de carga não devem ser confundidos com produtividade concluída.",
+    "tab": "Levantadores",
+    "keywords": "carga elegibilidade coluna m sap status list"
+  },
+  {
+    "category": "Levantadores",
+    "question": "O que são Recarregar demanda, Carga entre 10 e 50 e Verificar acúmulo?",
+    "answer": "Esses cards agrupam levantadores por faixas de carga operacional: de 1 a 9 obras, de 10 a 50 e de 51 ou mais, respectivamente. Ao clicar, a interface deve abrir a listagem de obras da faixa para consulta e encaminhamento a Relatórios.",
+    "tab": "Levantadores",
+    "keywords": "cards recarregar 1 9 carga 10 50 acúmulo 51 clicaveis"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Como consultar obras sem levantador?",
+    "answer": "Use o card Obras sem levantador na aba Levantadores. Ele mostra a quantidade de obras segundo o critério da aba e permite consultar os registros do grupo. Uma obra sem levantador não equivale automaticamente a serviço atrasado.",
+    "tab": "Levantadores",
+    "keywords": "sem equipe sem levantador"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Qual é a diferença entre carga e produtividade?",
+    "answer": "Carga é o estoque de obras elegíveis/atribuídas sob critérios operacionais da base NOTAS. Produtividade corresponde a registros com datas de levantamento ou análise na BASE_LIST, contabilizados conforme o período e a data de referência selecionados.",
+    "tab": "Levantadores",
+    "keywords": "carga versus produtividade"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Como são calculados os atrasos e prioridades?",
+    "answer": "A aba usa as datas e estados disponíveis na base operacional, incluindo DATA DESPACHO quando aplicável. Ela permite organizar obras por idade, faixas de prazo e seleção prioritária. A presença de uma data não comprova, por si só, que uma obra foi concluída.",
+    "tab": "Prazos e prioridades",
+    "keywords": "prazo despachos atrasos 10 dias 72 horas"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Como enviar obras atrasadas para Relatórios?",
+    "answer": "Use os controles de detalhamento/encaminhamento da aba para transportar o recorte de notas selecionadas a Relatórios. O cruzamento entre abas utiliza o identificador de nota; registros sem correspondência na base oficial precisam ser verificados separadamente.",
+    "tab": "Prazos e prioridades",
+    "keywords": "prioridade encaminhar relatorios cruzamento"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como usar os filtros múltiplos do relatório?",
+    "answer": "Abra a aba Relatórios, selecione a coluna e marque os valores desejados. Use a pesquisa dentro do seletor, aplique o filtro e combine condições. O botão Limpar tudo reinicia busca, filtros e ordenação próprios da tabela.",
+    "tab": "Relatórios",
+    "keywords": "multiselect multiplos tabela filtro"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como funciona a prévia do relatório?",
+    "answer": "A prévia mostra a configuração atual, colunas selecionadas e primeiras linhas do conjunto filtrado. A exportação considera todas as linhas elegíveis do recorte, não apenas as exibidas na prévia.",
+    "tab": "Relatórios",
+    "keywords": "prévia imprimir pdf relatorio"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como exportar CSV, Excel, PDF ou KML/KMZ?",
+    "answer": "Na aba Relatórios, aplique os filtros e selecione as colunas quando essa opção estiver disponível. Use os botões de exportação para gerar Excel/CSV, imprimir/salvar a visualização em PDF ou exportar o recorte geográfico em KML/KMZ. As exportações espaciais dependem de coordenadas válidas.",
+    "tab": "Relatórios",
+    "keywords": "exportar excel csv pdf kmz kml imprimir"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como funcionam os modelos salvos de filtros?",
+    "answer": "O recurso salva configurações usuais no navegador para reaplicação rápida. Como são preferências locais, podem não acompanhar o usuário ao trocar de computador ou limpar os dados do navegador.",
+    "tab": "Relatórios",
+    "keywords": "modelo preset salvar filtros"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Por que há notas da BASE_LIST não encontradas em Relatórios?",
+    "answer": "Qualidade Levantamento e Produtividade recebem dados da BASE_LIST, enquanto Relatórios utiliza a base de obras NOTAS. As notas são cruzadas por identificador. Quando a mesma nota não existe em ambas as fontes, ela não pode ser materializada como obra do relatório principal.",
+    "tab": "Relatórios",
+    "keywords": "integracao cruzamento bases notas nao encontradas"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "O que significa Correção de levantamento?",
+    "answer": "É o status identificado na coluna E da BASE_LIST que indica um levantamento com necessidade de correção, geralmente descrita na coluna AF. Esse status não comprova automaticamente culpa do levantador ou erro técnico de uma pessoa específica.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "correcao status list retorno campo"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como é montado o Top 5 de levantadores em correção?",
+    "answer": "O ranking conta os registros/notas enquadrados em Correção de levantamento e associados a cada profissional pela coluna O. Compare também a taxa indicativa de correção e o volume analisado, pois o total absoluto favorece equipes de maior volume.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "top 5 levantadores correcoes"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como é calculado o índice de correção?",
+    "answer": "A taxa indicativa compara obras em correção com a base de obras consideradas analisadas por levantador. Como o status da BASE_LIST é uma fotografia atual e não um histórico completo de reprovações, não interprete a taxa como índice definitivo de falhas individuais.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "indice taxa percentual qualidade"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como são classificados os motivos da coluna AF?",
+    "answer": "O texto das observações é agrupado por padrões/palavras-chave em categorias técnicas. Uma obra pode conter mais de um motivo e termos semelhantes podem ter significados diferentes; por isso, confira sempre o texto original e use o gráfico de Pareto como apoio, não como diagnóstico definitivo.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "af observacoes pareto motivos categorias"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "O que a coluna T informa sobre o analista?",
+    "answer": "A coluna T contém o analista de Pré-Análise registrado na obra. O painel indica correções e observações ausentes por analista; esse campo, isoladamente, não comprova quem mudou o status. Para auditoria de autoria é necessário histórico do sistema operacional.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "analista pre analise coluna t responsabilidade"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como são identificadas correções sem justificativa?",
+    "answer": "Para as obras com status Correção de levantamento na coluna E, o painel verifica se a observação da coluna AF está vazia. Se também faltar analista na coluna T, o registro é contabilizado como sem analista, sem atribuir responsabilidade a terceiros.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "sem justificativa af vazia analista"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "O que significa tempo entre levantamento e análise?",
+    "answer": "É o intervalo em dias entre a data Q, ligada ao levantamento, e a data U, da análise. Não equivale ao tempo de correção em campo ou ao prazo total de tratamento da pendência.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "tempo q u intervalo"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como funciona o mapa de correções?",
+    "answer": "O mapa destaca as notas em correção que possuem coordenadas válidas. Obras sem latitude/longitude não aparecem como pontos reais; os totais e a lista de registros devem deixar visíveis essas ausências.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "mapa correcoes municipio geografico"
+  },
+  {
+    "category": "Produtividade",
+    "question": "O que muda ao selecionar data Q ou data U?",
+    "answer": "A coluna Q é a data do levantamento em campo; a coluna U é a data da análise do levantamento. O padrão para produtividade de campo é Q. Alterar para U passa a medir os registros analisados na data, que podem ter sido levantados anteriormente.",
+    "tab": "Produtividade",
+    "keywords": "q u data levantamento analise referencia"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como são somados postes existentes e novos?",
+    "answer": "A coluna R registra postes existentes levantados e a coluna S registra postes novos (PLN). São somas distintas; quando a contagem de postes está vazia, não se deve inventar quantidade. Uma nota com zero postes pode continuar contando como obra, se cumprir o critério de data e identificação.",
+    "tab": "Produtividade",
+    "keywords": "poste existente r novo s pln"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como funcionam os rankings diários, semanais e mensais?",
+    "answer": "A aba permite selecionar um período, uma data de referência e levantador. O Top 10 ordena obras e postes no recorte; confira se o ranking usa Q (campo) ou U (análise), porque as classificações podem mudar.",
+    "tab": "Produtividade",
+    "keywords": "top 10 dia semana mes"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como é calculada a média diária?",
+    "answer": "A média usa as obras ou postes do intervalo divididos pela quantidade de dias considerada pela visualização. Se o painel especificar dias com registro, essa média não equivale à média por todos os dias úteis do calendário.",
+    "tab": "Produtividade",
+    "keywords": "media diaria ranking produtividade"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como utilizar o calendário de produtividade?",
+    "answer": "Selecione a referência Q ou U, o período e o levantador quando desejado. O calendário apresenta distribuição por data; ao selecionar um dia, use o detalhamento para conferir notas, postes e municípios correspondentes.",
+    "tab": "Produtividade",
+    "keywords": "calendario dia data"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como interpretar a análise preditiva?",
+    "answer": "A previsão é uma projeção indicativa a partir da média diária de uma janela recente, aplicada aos próximos 7 ou 30 dias. Ela não representa promessa de produção nem substitui metas, capacidade, feriados e particularidades do trabalho de campo.",
+    "tab": "Produtividade",
+    "keywords": "previsao preditiva 7 30 dias"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como funcionam as metas configuráveis?",
+    "answer": "As metas ajudam a comparar realizado e objetivo para o período. Elas ficam separadas dos dados oficiais e podem ser armazenadas como preferência do navegador, de acordo com a configuração da interface. Uma meta não modifica a contagem da BASE_LIST.",
+    "tab": "Produtividade",
+    "keywords": "meta objetivo percentual"
+  },
+  {
+    "category": "Produtividade",
+    "question": "O que é a matriz Qualidade × Produtividade?",
+    "answer": "É uma comparação exploratória de volume de produção com indicador de correção por levantador. Considere tamanho da amostra, dificuldade das obras e completude das análises antes de usar quadrantes para avaliar desempenho individual.",
+    "tab": "Produtividade",
+    "keywords": "matriz qualidade produtividade comparacao"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Por que o Excel e o dashboard podem mostrar quantidades diferentes?",
+    "answer": "Confira principalmente a referência Q versus U, o período, o levantador, filtros ativos, tratamento de datas em branco, notas duplicadas e postes vazios. Por exemplo, obras com Q preenchida e U vazia contam na produção de campo, mas não na produção analisada.",
+    "tab": "Produtividade",
+    "keywords": "divergencia excel dashboard contagem"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "De onde vêm os dados e como são atualizados?",
+    "answer": "A aplicação utiliza uma base principal de obras (aba NOTAS) e uma base complementar de levantamentos (BASE_LIST). A atualização é centralizada na aplicação. Os painéis documentam regras e lacunas sem exigir exposição da infraestrutura de hospedagem ou armazenamento ao usuário final.",
+    "tab": "Geral",
+    "keywords": "fonte atualizacao excel base list notas"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O assistente FAQ consulta informações em tempo real?",
+    "answer": "Não. O FAQ é um manual local com perguntas e respostas estáticas sobre as funcionalidades. Não existe agente NIP IA nesta versão. Os dados operacionais são carregados das planilhas, não das respostas do FAQ.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "ia perguntas tempo real inteligencia"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "Como corrigir erro de dados ou dúvidas sobre indicador?",
+    "answer": "Localize a nota no painel, confira colunas de origem e filtros, e valide a regra de contagem no manual. Os painéis não devem alterar automaticamente planilhas oficiais. Se houver diferença, registre exemplo concreto de nota, período e filtros utilizados.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "erros suporte discrepancias"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Como usar os novos painéis complementares?",
+    "answer": "Os painéis adicionais foram criados para complementar as análises de cada página. O bloco \"Resumo operacional e qualidade dos dados\" foi retirado da Visão Geral a pedido da operação. Consulte os indicadores e as análises restantes nas respectivas páginas.",
+    "tab": "Visão geral",
+    "keywords": "indicadores filtros navegação"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Como saber quais filtros estão aplicados?",
+    "answer": "Consulte o resumo de filtros operacionais da Visão Geral. Os filtros locais das outras abas são independentes e indicados nos respectivos quadros.",
+    "tab": "Visão geral",
+    "keywords": "filtros ativos"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como interpretar obras sem coordenadas?",
+    "answer": "Obras sem coordenadas válidas continuam contabilizadas nos indicadores e podem ser selecionadas pelo filtro correspondente. A listagem lateral detalhada de obras sem coordenadas foi retirada da Visão Geral; isso não elimina os registros da base.",
+    "tab": "Visão geral",
+    "keywords": "coordenadas cobertura mapa"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Carga atribuída é o mesmo que produção?",
+    "answer": "Não. Carga é o estoque de obras associado ao levantador na base operacional. Produção de campo usa a data do levantamento (coluna Q) da BASE_LIST. As duas medidas podem ter universos distintos.",
+    "tab": "Levantadores",
+    "keywords": "carga produção"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Os alertas de prazo mostram o histórico de movimentações?",
+    "answer": "Não. A idade de despacho é calculada com a data atual e a data de despacho disponível. Sem registros históricos de status, o painel não prova que a obra permaneceu totalmente parada.",
+    "tab": "Prazos e prioridades",
+    "keywords": "atrasos prazos histórico"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como conferir um relatório exportado?",
+    "answer": "Verifique o período, os filtros, o tipo de base, a data de referência e a diferença entre linhas e notas distintas. O modelo complementar exporta CSV com cabeçalho e critérios.",
+    "tab": "Relatórios",
+    "keywords": "exportar csv conferência"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Qual a diferença entre quantidade e taxa de correção?",
+    "answer": "Quantidade é o número de registros em correção. Taxa requer um denominador consistente de obras levantadas no mesmo recorte; sem essa compatibilidade, não se deve comparar percentuais entre colaboradores.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "taxa retrabalho correção"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como comparar dois períodos de produção?",
+    "answer": "Selecione a referência de campo (Q) e o período desejado. Os novos quadros exibem tendência diária e comparação com janela anterior equivalente em dias corridos, não dias úteis.",
+    "tab": "Produtividade",
+    "keywords": "comparativo produção períodos"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Qual a diferença entre produção de campo e análise?",
+    "answer": "Produção de campo utiliza a data do levantamento (Q). A data U registra a análise de levantamento no escritório e deve ser consultada na Pré-Análise.",
+    "tab": "Produtividade",
+    "keywords": "coluna q coluna u"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que são entradas, saídas e fila de Pré-Análise?",
+    "answer": "Entrada é Q preenchida; saída registrada é U preenchida. A fila atual contém Q preenchida e U vazia. Entradas e saídas em um período podem representar obras diferentes.",
+    "tab": "Pré-Análise",
+    "keywords": "fila entradas saidas q u"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como é calculado o tempo de Pré-Análise?",
+    "answer": "Para registros com Q e U válidas, tempo = U menos Q em dias corridos. Para pendências com Q e U vazia, espera = data atual menos Q. Datas invertidas ou futuras são destacadas para conferência.",
+    "tab": "Pré-Análise",
+    "keywords": "tempo espera datas"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O analista da coluna T é quem mudou o status?",
+    "answer": "A coluna T informa o analista associado ao registro. A coluna E mostra o status atual. Sem histórico de ações não é possível atribuir com certeza a autoria da mudança de status.",
+    "tab": "Pré-Análise",
+    "keywords": "analista status autoria"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como funciona o calendário de Pré-Análise?",
+    "answer": "No calendário, selecione o modo Recebidas do campo (Q) ou Analisadas (U), navegue entre meses e clique em um dia para conferir o detalhamento. O filtro de analista e status atual permanece aplicado.",
+    "tab": "Pré-Análise",
+    "keywords": "calendário pré análise"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O dashboard possui agente de inteligência artificial?",
+    "answer": "Não. A opção NIP IA foi removida. Os painéis e o FAQ usam cálculos locais e não precisam de créditos de API para funcionar.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "sem ia api"
+  },
+  {
+    "category": "Primeiros passos",
+    "question": "Por que cada aba agora possui um arquivo Python?",
+    "answer": "O dashboard passou a ter oito arquivos em pages/, cada um correspondente a uma página do Streamlit. app_nip.py inicializa a navegação e nip_shared.py compartilha a leitura das planilhas e o motor visual. O HTML permanece compartilhado nesta etapa; os cálculos e os gráficos não foram integralmente reescritos em Python.",
+    "tab": "Visão geral",
+    "keywords": "pages py estrutura"
+  },
+  {
+    "category": "Primeiros passos",
+    "question": "Como mudar de página sem perder os dados?",
+    "answer": "Use o menu lateral do Streamlit. As páginas consultam as mesmas bases compartilhadas. Alguns filtros globais são guardados no navegador, mas os filtros internos de cada página podem precisar de nova seleção.",
+    "tab": "Visão geral",
+    "keywords": "menu navegação filtros persistencia"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Onde está o antigo quadro de resumo operacional?",
+    "answer": "O bloco Resumo operacional e qualidade dos dados foi retirado da interface. Os indicadores principais da carteira continuam disponíveis na Visão Geral.",
+    "tab": "Visão geral",
+    "keywords": "resumo removido"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que a lista lateral de obras sem coordenadas não aparece mais?",
+    "answer": "A lista lateral foi removida da interface para liberar espaço no mapa. As obras sem coordenadas permanecem na base e nas contagens; utilize o filtro Somente sem coordenadas para restringir a consulta.",
+    "tab": "Visão geral",
+    "keywords": "sem coordenadas lista removida"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que alguns bonequinhos representam mais de uma pessoa?",
+    "answer": "Pessoas com a mesma coordenada residencial são agrupadas num único bonequinho para evitar sobreposição. Clique no marcador para ver os colaboradores do local. O número ao lado do bonequinho foi removido.",
+    "tab": "Visão geral",
+    "keywords": "equipe marcador agrupamento"
+  },
+  {
+    "category": "Levantadores",
+    "question": "O filtro da coluna M interfere na carga atribuída?",
+    "answer": "Na página Levantadores, a opção de desconsiderar obras com coluna M diferente de 0 retira da carga as obras marcadas como orçamento modular não enviado a campo. A opção é marcada por padrão; células vazias não são excluídas por esse motivo.",
+    "tab": "Levantadores",
+    "keywords": "coluna M orçamento modular"
+  },
+  {
+    "category": "Levantadores",
+    "question": "Quais status entram na carga por levantador?",
+    "answer": "A carga considera STATUS LIST 0, Em levantamento e Correção de levantamento, com exclusão de SAP FINL/CANC e aplicação das condições de SISCO indicadas no painel. Confira os filtros adicionais da página antes de comparar totais.",
+    "tab": "Levantadores",
+    "keywords": "carga status list sap sisco"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "A partir de qual data os dias de atraso são contados?",
+    "answer": "O prazo operacional é calculado a partir da data de despacho, não da última alteração de STATUS LIST. Notas sem data válida são separadas e não recebem prazo calculado.",
+    "tab": "Prazos e prioridades",
+    "keywords": "despacho prazo"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "O que significa obra acima de 10 dias?",
+    "answer": "É uma obra elegível cujo intervalo desde o despacho ultrapassou 10 dias corridos, conforme as regras SAP, SISCO e LIST informadas no painel. Isso não comprova inatividade desde a última mudança de status.",
+    "tab": "Prazos e prioridades",
+    "keywords": "10 dias atraso"
+  },
+  {
+    "category": "Prazos e prioridades",
+    "question": "Como interpretar o calendário de prazos?",
+    "answer": "Use o mês e o dia selecionados para observar o recorte de datas oferecido pelo calendário. Confirme se o painel está utilizando despacho ou outro evento indicado no título, e lembre-se de que registros sem data válida não aparecem em dias do calendário.",
+    "tab": "Prazos e prioridades",
+    "keywords": "calendario prazo"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Os relatórios são iguais em todas as páginas?",
+    "answer": "A página Relatórios oferece filtros, prévia e formatos de exportação próprios. Algumas outras páginas também oferecem exportações específicas. A disponibilidade de CSV, Excel, PDF ou KML/KMZ depende do botão efetivamente exibido e dos dados disponíveis.",
+    "tab": "Relatórios",
+    "keywords": "exportacao formatos"
+  },
+  {
+    "category": "Relatórios",
+    "question": "Como evitar diferenças entre os totais exportados e os cards?",
+    "answer": "Compare a origem dos dados, os filtros ativos, a elegibilidade por status, o tratamento de duplicidades e a data da atualização. Nem todo card usa a mesma população da tabela exportada.",
+    "tab": "Relatórios",
+    "keywords": "conferencia contagem"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "Como distinguir quantidade de correções e taxa de correção?",
+    "answer": "A quantidade é o número de registros classificados como correção no recorte. Uma taxa exige denominador adequado, como o total de levantamentos comparáveis. Não interprete a contagem isolada como índice de desempenho individual.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "taxa denominador qualidade"
+  },
+  {
+    "category": "Qualidade Levantamento",
+    "question": "A justificativa da coluna AF pode ficar vazia?",
+    "answer": "Sim. Uma correção sem justificativa preenchida pode aparecer nos controles de qualidade de dados. A ausência de texto não comprova motivo de correção; é uma pendência de registro.",
+    "tab": "Qualidade Levantamento",
+    "keywords": "AF motivo"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Por que os totais diários não são iguais à carga da equipe?",
+    "answer": "Produtividade contabiliza eventos de produção, usando datas de levantamento e as regras da BASE_LIST. Carga representa obras atribuídas e elegíveis na carteira operacional. São métricas diferentes, com fontes e períodos distintos.",
+    "tab": "Produtividade",
+    "keywords": "Q produção carga"
+  },
+  {
+    "category": "Produtividade",
+    "question": "Como comparar períodos com números de dias diferentes?",
+    "answer": "Confira o intervalo selecionado e a métrica exibida. Médias por dia corrido não equivalem a médias por dia útil; diferenças de férias, feriados e escala não são ajustadas automaticamente, salvo indicação explícita.",
+    "tab": "Produtividade",
+    "keywords": "comparacao 30 dias"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Qual coluna identifica o analista e quais registram as datas?",
+    "answer": "Na BASE_LIST, T identifica o analista de Pré-Análise, Q a data do levantamento e U a data da análise de levantamento. A coluna E representa o status atual do projeto; não é um histórico de quem alterou o status.",
+    "tab": "Pré-Análise",
+    "keywords": "T Q U E"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que é uma análise pendente no painel?",
+    "answer": "Em geral, é um registro com data de levantamento Q preenchida e data de análise U ausente, respeitando os filtros e regras do painel. Esse critério não prova que a atividade esteja atrasada sem uma meta de prazo definida.",
+    "tab": "Pré-Análise",
+    "keywords": "pendencia fila"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "O que o calendário da Pré-Análise contabiliza?",
+    "answer": "O calendário implementado contabiliza as análises registradas pela data U. Selecionar um dia permite consultar o recorte correspondente; Q representa a entrada do levantamento em campo e não deve ser confundida com a data U.",
+    "tab": "Pré-Análise",
+    "keywords": "calendario U"
+  },
+  {
+    "category": "Pré-Análise",
+    "question": "Como são tratadas datas inconsistentes de Q e U?",
+    "answer": "Datas ausentes ou inválidas devem ser verificadas na BASE_LIST. Uma data U anterior a Q requer conferência do registro; não deve ser interpretada automaticamente como prazo negativo real de execução.",
+    "tab": "Pré-Análise",
+    "keywords": "datas inconsistentes"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "Os filtros de uma página são aplicados automaticamente às demais?",
+    "answer": "Não necessariamente. O aplicativo usa as mesmas fontes e preserva alguns campos globais no navegador, mas filtros específicos de mapas, calendários, tabelas e rankings podem ser independentes. Confira os filtros ao trocar de página.",
+    "tab": "Visão geral",
+    "keywords": "multipaginas filtros"
+  },
+  {
+    "category": "Indicadores e navegação",
+    "question": "O botão Ir para a aba funciona na versão multipáginas?",
+    "answer": "Na versão multipáginas, a navegação principal deve ser feita pelo menu lateral do Streamlit. Os links internos do antigo HTML não são a referência para alternar entre arquivos Python.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "navegacao paginas"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O FAQ altera as planilhas ou os cálculos?",
+    "answer": "Não. O FAQ é conteúdo explicativo. As bases são carregadas pelo módulo compartilhado e os indicadores são produzidos pelas rotinas do dashboard. Atualizar as perguntas não altera os dados de origem.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "faq leitura"
+  },
+  {
+    "category": "Dados e privacidade",
+    "question": "O que fazer se uma página mostrar dados diferentes de outra?",
+    "answer": "Verifique o arquivo de origem, a data de atualização, os filtros, o tratamento de status e as regras específicas da página. Se a diferença persistir, registre nota e critérios para conferência no arquivo operacional.",
+    "tab": "FAQ / Dúvidas",
+    "keywords": "divergencia"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como funciona o raio de atendimento?",
+    "answer": "Na Visão Geral selecione um colaborador e um raio de 25, 50, 100 ou 200 km. A distância é geodésica aproximada em linha reta (Haversine), medida a partir da coordenada cadastrada do colaborador; não é um tempo nem percurso rodoviário.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "A seleção de obras próximas altera a atribuição?",
+    "answer": "Não. A ferramenta apenas consulta obras próximas à residência cadastrada. A coluna LEVANTADOR e a atribuição oficial permanecem inalteradas.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "O que mostra o painel do levantador?",
+    "answer": "Mostra a carga elegível atribuída ao colaborador, as obras elegíveis com mais de 10 dias desde o despacho e as obras situadas dentro do raio selecionado. Obras próximas não são necessariamente obras atribuídas.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como são aplicados os novos filtros geográficos?",
+    "answer": "Os filtros complementares por idade desde despacho, sem levantador e Correção de levantamento usam como ponto de partida o recorte já aplicado pelos filtros operacionais originais. Limpar apenas análise geográfica não apaga os filtros principais.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como usar o mapa de calor?",
+    "answer": "No painel Ferramentas geográficas selecione Obras filtradas ou Em atraso. A modalidade em atraso usa obras elegíveis com mais de 10 dias desde o despacho e coordenadas válidas; a camada é indicativa e não substitui os marcadores existentes.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "O que é exportado para KML e KMZ?",
+    "answer": "Os arquivos contêm obras com coordenadas válidas que atendem ao recorte geográfico complementar e equipes visíveis nos filtros do mapa. Obras sem coordenadas continuam nas contagens, mas não podem ser representadas como pontos reais. KMZ requer a biblioteca JSZip carregada.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como funciona a auditoria geográfica?",
+    "answer": "Ela identifica coordenadas ausentes, inválidas, fora de um retângulo aproximado do Maranhão e coordenadas compartilhadas com arredondamento de cinco casas. Não determina automaticamente o município correto e não modifica a fonte.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Por que algumas obras não aparecem no mapa mas contam nos indicadores?",
+    "answer": "Registros sem coordenadas válidas ou fora do filtro geográfico podem permanecer nos totais originais. A ferramenta não inventa posições e preserva a contagem oficial da carteira.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Visão geral",
+    "question": "Como abrir a ficha da equipe pelo bonequinho?",
+    "answer": "Ao clicar no bonequinho do mapa, a ferramenta tenta selecionar o colaborador cadastrado mais próximo daquele ponto e mostra a análise geográfica. Coordenadas de vários colaboradores no mesmo ponto continuam agrupadas no marcador original.",
+    "tab": "Visão Geral",
+    "keywords": "mapa equipe coordenadas distância raio auditoria exportação"
+  },
+  {
+    "category": "Croquis",
+    "question": "Como gerar um croqui no mapa de satélite?",
+    "answer": "Na aba Croquis, preencha Cliente e Transformador com nome, latitude e longitude, escreva a Descrição da obra, informe os pontos extras na ordem desejada e clique em Gerar croqui.",
+    "tab": "Croquis",
+    "keywords": "croqui satélite cliente transformador pontos rota linha amarela exportar"
+  },
+  {
+    "category": "Croquis",
+    "question": "Como funciona a linha amarela do croqui?",
+    "answer": "O sistema tenta consultar o OSRM para traçar cada trecho pelo arruamento. Quando a rota não está disponível ou não é utilizável, desenha o trecho em linha reta. Isso é um apoio visual e não define automaticamente o traçado da rede elétrica.",
+    "tab": "Croquis",
+    "keywords": "croqui satélite cliente transformador pontos rota linha amarela exportar"
+  },
+  {
+    "category": "Croquis",
+    "question": "Posso renomear ou adicionar pontos extras?",
+    "answer": "Sim. O nome de cada Ponto extra é editável, e o botão Adicionar ponto extra permite criar quantos pontos forem necessários. Cada ponto precisa de latitude e longitude.",
+    "tab": "Croquis",
+    "keywords": "croqui satélite cliente transformador pontos rota linha amarela exportar"
+  },
+  {
+    "category": "Croquis",
+    "question": "Como exportar o croqui?",
+    "answer": "Depois de gerar o desenho, use Exportar KML para abrir no Google Earth ou Exportar imagem PNG. A captura PNG depende de permissão de uso das imagens de satélite (CORS); se falhar, use Imprimir/PDF ou KML.",
+    "tab": "Croquis",
+    "keywords": "croqui satélite cliente transformador pontos rota linha amarela exportar"
+  },
+  {
+    "category": "Croquis",
+    "question": "O croqui altera as obras ou o mapa principal?",
+    "answer": "Não. O editor de croquis é independente e não modifica a carteira, os filtros, a atribuição de equipes ou as regras de contagem do Dashboard NIP.",
+    "tab": "Croquis",
+    "keywords": "croqui satélite cliente transformador pontos rota linha amarela exportar"
+  }
+]
