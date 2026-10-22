@@ -24,7 +24,6 @@ import streamlit.components.v1 as components
 
 ROOT = Path(__file__).resolve().parent
 EXCEL_NAME = 'BASE_LEVANTAMENTO_ATUALIZADA.xlsx'
-SANEAMENTO_NAME = 'BASE_SANEAMENTO_ATUALIZADA.xlsx'
 TEMPLATE_NAME = 'nip_dashboard_template.html'
 LIST_NAME = 'BASE_LIST.xlsx'
 LOCALIDADE_NAME = 'LOCALIDADE LEVANTADORES-SANEAMENTO.xlsx'
@@ -73,6 +72,28 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"],
 [data-testid="stAppViewContainer"] > section {margin-left:0!important;}
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {gap:0.8rem;}
 [data-testid="stSidebar"] h2 {color:#123653;}
+/* Fill the Streamlit viewport; prevent the centered default content column. */
+[data-testid="stAppViewContainer"], [data-testid="stAppViewContainer"] > section,
+[data-testid="stMain"], [data-testid="stMain"] > div,
+[data-testid="stMainBlockContainer"], .block-container,
+[data-testid="stMainBlockContainer"] > div,
+[data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"],
+[data-testid="stMainBlockContainer"] [data-testid="stElementContainer"],
+[data-testid="stMainBlockContainer"] [data-testid="stCustomComponentV1"] {
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    margin-left:0!important;
+    margin-right:0!important;
+}
+[data-testid="stMain"], [data-testid="stMainBlockContainer"], .block-container {
+    padding-left:0!important;
+    padding-right:0!important;
+}
+[data-testid="stAppViewBlockContainer"] {max-width:none!important;width:100%!important;padding:0!important;}
+[data-testid="stSidebar"], [data-testid="stSidebarNav"], [data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {display:none!important;}
+[data-testid="stMain"] {margin:0!important; flex:1 1 auto!important;}
 </style>''', unsafe_allow_html=True)
 
 
@@ -111,159 +132,6 @@ def get_shared_base():
     local=ROOT/EXCEL_NAME
     if local.exists():return local.read_bytes(),'Dados disponíveis'
     raise FileNotFoundError('Dados operacionais indisponíveis no momento.')
-
-@st.cache_data(ttl=90, show_spinner=False)
-def get_shared_saneamento():
-    """Obtém a base adicional no mesmo GitHub; não altera nenhum arquivo-fonte."""
-    try:
-        remote = get_remote_file(filename=SANEAMENTO_NAME)
-        if remote is not None:
-            return remote
-    except Exception:
-        # Permite que um teste local funcione mesmo sem acesso ao GitHub.
-        pass
-    local = ROOT / SANEAMENTO_NAME
-    if local.is_file():
-        return local.read_bytes()
-    raise FileNotFoundError(
-        f'Base de saneamento ausente: {SANEAMENTO_NAME}. '
-        'Confirme o nome do arquivo na raiz do repositório GitHub.'
-    )
-
-
-def _nip_note_key(value):
-    """Compara NOTA (Saneamento) com PROTOCOLO (Levantamento), nunca por nome."""
-    if value is None or (not isinstance(value, (list, dict)) and pd.isna(value)):
-        return ''
-    key = str(value).strip()
-    if key.endswith('.0') and key[:-2].isdigit():
-        key = key[:-2]
-    return '' if key.lower() in ('', 'nan', 'none', 'null', '0') else key.upper()
-
-
-def _nip_clean(value):
-    if value is None or (not isinstance(value, (list, dict)) and pd.isna(value)):
-        return ''
-    return str(value).strip()
-
-
-def _nip_coord(value, latitude):
-    try:
-        v = float(_nip_clean(value).replace(',', '.'))
-        if not (float('-inf') < v < float('inf')):
-            return None
-        if latitude and not (-35 < v < 5 and v != 0):
-            return None
-        if not latitude and not (-75 < v < -30):
-            return None
-        return v
-    except (ValueError, TypeError):
-        return None
-
-
-def _nip_san_location(row):
-    """Prioriza a coordenada do projeto; usa a coordenada de campo como reserva."""
-    for la, lo in [('LATITUDE PROJETO', 'LONGITUDE PROJETO'),
-                   ('LATITUDE CAMPO', 'LONGITUDE CAMPO')]:
-        lat, lon = _nip_coord(row.get(la), True), _nip_coord(row.get(lo), False)
-        if lat is not None and lon is not None:
-            return lat, lon
-    return None, None
-
-
-def _nip_san_meters(value):
-    try:
-        v = float(_nip_clean(value).replace(',', '.'))
-        return round(v * 1000, 3) if v >= 0 and v < float('inf') else None
-    except (ValueError, TypeError):
-        return None
-
-
-@st.cache_data(show_spinner=False, max_entries=4)
-def merge_saneamento_payload(levantamento_json: str, saneamento_blob: bytes):
-    """Consolida sem alterar o layout ou os registros existentes da aba NOTAS.
-
-    Chave primária do cruzamento: Saneamento.NOTA == Levantamento.PROTOCOLO.
-    Para uma nota em ambas as fontes existe apenas um card/marcador.
-    """
-    rows = json.loads(levantamento_json)
-    index = {}
-    for row in rows:
-        row['ORIGEM_BASE'] = 'LEVANTAMENTO'
-        row['BASE_DUPLICADA'] = False
-        key = _nip_note_key(row.get('PROTOCOLO'))
-        if key:
-            index.setdefault(key, []).append(row)
-
-    cols = [
-        'ID', 'NOTA', 'CONTA CONTRATO', 'STATUS', 'NOME', 'TIPO DEMANDA',
-        'MUNICÍPIO', 'REGIONAL', 'ENDEREÇO', 'LATITUDE PROJETO',
-        'LONGITUDE PROJETO', 'LATITUDE CAMPO', 'LONGITUDE CAMPO',
-        'QTD POSTE', 'KM BT', 'KM MT', 'OBSERVAÇÃO', 'INSTALAÇÃO',
-    ]
-    san = pd.read_excel(io.BytesIO(saneamento_blob), sheet_name='Clientes Existentes',
-                        engine='openpyxl', dtype=object, usecols=lambda col: col in cols)
-    required = {'NOTA', 'LATITUDE PROJETO', 'LONGITUDE PROJETO'}
-    missing = required - set(san.columns)
-    if missing:
-        raise ValueError('BASE_SANEAMENTO_ATUALIZADA sem colunas: ' + ', '.join(sorted(missing)))
-
-    # Consolida notas repetidas dentro do Saneamento, se ocorrerem, sem perda
-    # de duplicidade entre as duas bases nem duplicação de marcadores.
-    seen_san = set()
-    duplicated = set()
-    saneamento_only = 0
-    for record in san.to_dict(orient='records'):
-        key = _nip_note_key(record.get('NOTA'))
-        if key and key in seen_san:
-            continue
-        if key:
-            seen_san.add(key)
-        lat, lon = _nip_san_location(record)
-        matching = index.get(key, []) if key else []
-        if matching:
-            duplicated.add(key)
-            for obra in matching:
-                obra['BASE_DUPLICADA'] = True
-                obra['ORIGEM_BASE'] = 'LEVANTAMENTO E SANEAMENTO'
-                # Não altera coordenadas já válidas do Levantamento.
-                if (_nip_coord(obra.get('LATITUDE'), True) is None or
-                    _nip_coord(obra.get('LONGITUDE'), False) is None):
-                    if lat is not None and lon is not None:
-                        obra['LATITUDE'], obra['LONGITUDE'] = lat, lon
-            continue
-
-        note = key or ('SANEAMENTO / ID ' + _nip_clean(record.get('ID')))
-        rows.append({
-            'PROTOCOLO': note,
-            'ID SISCO': None,
-            'TIPO NOTA': _nip_clean(record.get('TIPO DEMANDA')),
-            'STATUS SAP': None,       # Saneamento não possui status SAP.
-            'STATUS SISCO': None,     # Saneamento não possui status SISCO.
-            'STATUS LIST': 'SEM STATUS LIST',
-            'CONTRATO': None,
-            'REGIONAL': _nip_clean(record.get('REGIONAL')),
-            'MUNICIPIO': _nip_clean(record.get('MUNICÍPIO')),
-            'LEVANTADOR': None,
-            'DATA DESPACHO': None,
-            'NOME': _nip_clean(record.get('NOME')),
-            'LATITUDE': lat,
-            'LONGITUDE': lon,
-            'DISTANCIA BT': _nip_san_meters(record.get('KM BT')),
-            'DISTANCIA MT': _nip_san_meters(record.get('KM MT')),
-            'POSTES PREVISTOS TOTAL': _nip_clean(record.get('QTD POSTE')),
-            'ENDEREÇO': _nip_clean(record.get('ENDEREÇO')),
-            'INFORMAÇÕES': _nip_clean(record.get('OBSERVAÇÃO')),
-            'CONTA CONTRATO': _nip_clean(record.get('CONTA CONTRATO')),
-            'INSTALAÇÃO': _nip_clean(record.get('INSTALAÇÃO')),
-            'ORIGEM_BASE': 'SANEAMENTO',
-            'BASE_DUPLICADA': False,
-        })
-        saneamento_only += 1
-
-    payload = json.dumps(rows, ensure_ascii=False, separators=(',', ':'), allow_nan=False)
-    return payload, len(rows), len(duplicated), saneamento_only
-
 
 @st.cache_data(show_spinner=False,max_entries=4)
 def parse_notas(blob:bytes):
@@ -586,11 +454,7 @@ def admin_panel():
 def render_page(page_id: str):
     try:
         blob,source=get_shared_base()
-        levantamento_payload, _ = parse_notas(blob)
-        saneamento_blob = get_shared_saneamento()
-        payload, count, duplicated_count, saneamento_only = merge_saneamento_payload(
-            levantamento_payload, saneamento_blob
-        )
+        payload,count=parse_notas(blob)
         template=(ROOT/TEMPLATE_NAME).read_text(encoding='utf-8')
         if template.count('__NIP_DATA_PAYLOAD__')!=1:
             raise ValueError('Template visual inválido: marcador da base ausente ou duplicado.')
@@ -664,7 +528,6 @@ def render_page(page_id: str):
         # outer Streamlit document from scrolling the embedded header off-screen.
         html = add_page_controller(html, page_id)
         components.html(html,height=900,scrolling=False)
-        st.caption(f'{count:,} registros disponíveis · atualização automática de indicadores.'.replace(',','.'))
     except Exception as e:
         st.error('Não foi possível carregar o Dashboard NIP.')
         st.warning('Os dados não puderam ser carregados neste momento.')
@@ -677,7 +540,6 @@ def render_page(page_id: str):
 # horizontal navigation or override the original dashboard CSS.
 _PAGE_TABS = {
     'geral': 'nip-tab-geral',
-    'duplicadas': 'nip-tab-duplicadas',
     'equipe': 'nip-tab-equipe',
     'prazos': 'nip-tab-prazos',
     'relatorios': 'nip-tab-relatorios',
@@ -691,16 +553,6 @@ _PAGE_TABS = {
 def add_page_controller(html: str, page_id: str) -> str:
     if page_id not in _PAGE_TABS:
         raise ValueError('Página não reconhecida: ' + page_id)
-    # A nova pagina possui sua aba nativa no HTML e seus proprios filtros.
-    if page_id == 'duplicadas':
-        js = """<script>
-window.addEventListener('load', function(){
-  const nav = document.getElementById('nipNav');
-  const btn = nav && nav.querySelector('button[data-duplicate-tab="1"]');
-  if(btn) btn.click();
-}, {once:true});
-</script>"""
-        return html[:html.rfind('</body>')] + js + html[html.rfind('</body>'):]
     # The default route uses the untouched original tab selection.
     if page_id == 'geral':
         return html
@@ -720,4 +572,4 @@ window.addEventListener('load', function(){
   }
 }, {once:true});
 </script>""".replace('__TAB__', tab)
-    return html[:html.rfind('</body>')] + js + html[html.rfind('</body>'):]
+    return html.replace('</body>', js+'</body>', 1)
