@@ -280,6 +280,8 @@ const tabs=[['Visão geral','geral'],['Levantadores','equipe'],['Prazos e priori
 nav.innerHTML=tabs.map((x,i)=>x[1]==='qualidade'?'':`<button type="button" data-tab="${i}" class="${i===0?'selected':''}">${x[0]}</button>`).join('');main.prepend(nav);
 const panels=tabs.map(([name,id],i)=>{let el=document.createElement('div');el.className='nip-tab '+(i?'nip-hidden':'');el.id='nip-tab-'+id;main.append(el);return el});
 for(const cls of ['kpis','content']){let el=main.querySelector(':scope > .'+cls);if(el)panels[0].appendChild(el)}
+// A legenda pertence exclusivamente a Visão Geral, junto ao mapa.
+const obraLegend=$n('nipStatusColorLegend');if(obraLegend){const cards=panels[0].querySelector('.kpis');if(cards)cards.after(obraLegend);else panels[0].prepend(obraLegend)}
 let mapNote=$n('mapzoomnote');if(mapNote)panels[0].appendChild(mapNote);
 let aging=$n('aging'),workload=$n('workload');if(aging)panels[2].appendChild(aging);if(workload)panels[1].appendChild(workload);
 const extra=document.createElement('div');extra.className='nip-extra';extra.innerHTML=`
@@ -1932,7 +1934,7 @@ el('crBatchAdd').onclick=crAddBatch;el('crBatchZip').onclick=crExportBatch;el('c
 #nip-tab-dashboard .ed-grid{display:grid;gap:12px;margin:12px 0}
 #nip-tab-dashboard .ed-grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
 #nip-tab-dashboard .ed-grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
-#nip-tab-dashboard .ed-quick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}
+#nip-tab-dashboard .ed-quick{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
 #nip-tab-dashboard .ed-action{text-align:left;min-width:0;background:#fff;border:1px solid #dce5ee;border-radius:8px;padding:12px;cursor:pointer;color:#193a56;display:flex;flex-direction:column;gap:7px;min-height:92px}
 #nip-tab-dashboard .ed-action:hover{border-color:#087b8a;background:#f4fbfc}
 #nip-tab-dashboard .ed-action strong{font-size:12px}
@@ -1963,6 +1965,7 @@ el('crBatchAdd').onclick=crAddBatch;el('crBatchZip').onclick=crExportBatch;el('c
 #nip-tab-dashboard .ed-segment{display:flex;gap:5px;background:#f0f4f8;padding:4px;border-radius:8px;margin:8px 0 12px}
 #nip-tab-dashboard .ed-segment button{border:0;border-radius:6px;padding:7px;flex:1;background:transparent;color:#5b7185;font-size:11px;cursor:pointer}
 #nip-tab-dashboard .ed-segment button.ed-selected{background:white;color:#0d7284;box-shadow:0 1px 4px #c9dbe6;font-weight:700}
+#nip-tab-dashboard #edDuplicatesPanel[hidden]{display:none!important}
 #nip-tab-dashboard .ed-panel .ed-button{border:1px solid #b6d3e3;border-radius:6px;background:#f4fbfc;color:#126c7c;padding:8px 11px;cursor:pointer;font-weight:700}
 #nip-tab-dashboard .ed-risk-row{display:flex;gap:7px;justify-content:space-between;flex-wrap:wrap}
 #nip-tab-dashboard .ed-risk-row>.ed-stat{flex:1;text-align:center;min-width:90px}
@@ -1981,18 +1984,19 @@ el('crBatchAdd').onclick=crAddBatch;el('crBatchZip').onclick=crExportBatch;el('c
 const nav=document.getElementById('nipNav'),main=document.querySelector('main');
 if(!nav||!main||document.getElementById('nip-tab-dashboard'))return;
 const b=document.createElement('button');b.type='button';b.textContent='Dashboard';b.id='nipDashboardButton';
-const first=nav.querySelector('button');if(first)first.insertAdjacentElement('afterend',b);else nav.appendChild(b);
+const first=nav.querySelector('button');if(first)first.insertAdjacentElement('beforebegin',b);else nav.appendChild(b);
 const panel=document.createElement('section');panel.id='nip-tab-dashboard';panel.className='nip-tab nip-hidden';
 nav.insertAdjacentElement('afterend',panel);
 panel.innerHTML=`
 <div class="ed-panel"><h3>◉ Acesso Rápido</h3><div class="ed-quick">
 <button type="button" class="ed-action" data-go="Visão geral"><span class="ed-icon" style="background:#327fe6">▣</span><strong>Meus Projetos</strong><small>Consultar obras e responsáveis</small></button>
-<button type="button" class="ed-action" id="edImport"><span class="ed-icon" style="background:#21ad73">↥</span><strong>Importar CSV</strong><small>Conferir arquivo local, sem alterar a base</small></button>
 <button type="button" class="ed-action" data-go="Visão geral"><span class="ed-icon" style="background:#a34bea">▥</span><strong>Mapa de Projetos</strong><small>Visualização geográfica</small></button>
 <button type="button" class="ed-action" data-go="Relatórios"><span class="ed-icon" style="background:#6954e9">▥</span><strong>Análises (BI)</strong><small>Relatórios e métricas</small></button>
 <button type="button" class="ed-action" data-go="Prazos"><span class="ed-icon" style="background:#f14a58">◷</span><strong>Projetos Vencidos</strong><small>Prazo acima de 10 dias</small></button>
 <button type="button" class="ed-action" id="edDuplicates"><span class="ed-icon" style="background:#eaa000">⚠</span><strong>Duplicados</strong><small>Verificação por ID SISCO</small></button>
-</div><input type="file" id="edFile" accept=".csv,text/csv" hidden><p class="ed-foot" id="edImportStatus" hidden></p></div>
+</div></div>
+<div class="ed-panel" style="margin-top:12px"><div class="ed-summary"><h3>Distribuição por STATUS LIST</h3><small id="edStatusTotal"></small></div><p class="ed-sub">Situações cadastradas na coluna STATUS LIST da planilha; 0 é mantido como categoria própria, sem ser tratado como conclusão.</p><div id="edStatusBreakdown"></div></div>
+<div class="ed-panel" id="edDuplicatesPanel" style="margin-top:12px" hidden><div class="ed-summary"><h3>Auditoria de IDs SISCO repetidos</h3><button type="button" class="ed-button" id="edDuplicatesClose">Fechar</button></div><p class="ed-sub" id="edDuplicatesInfo"></p><div class="ed-wrap-table"><table class="ed-table"><thead><tr><th>ID SISCO</th><th>Ocorrências</th><th>Protocolo(s)</th><th>Município(s)</th><th>STATUS LIST</th></tr></thead><tbody id="edDuplicatesBody"></tbody></table></div><div class="ed-foot">A repetição do ID SISCO é um indício para conferência, não prova de duplicação indevida. A auditoria respeita os filtros operacionais.</div><button type="button" class="ed-button" id="edDuplicatesExport" style="margin-top:9px">Exportar auditoria CSV</button></div>
 <div class="ed-grid ed-grid3">
 <div class="ed-panel"><div class="ed-summary"><h3>Resumo de Status</h3><small id="edTotal">0 registros</small></div><div class="ed-summary"><span>Taxa de conclusão</span><strong id="edCompletion">0%</strong></div><div class="ed-meter"><i id="edCompletionBar" style="width:0%"></i></div><div class="ed-ministat" id="edStatusCells"></div><div class="ed-foot">Situação atual dos registros, conforme STATUS LIST</div></div>
 <div class="ed-panel"><div class="ed-summary"><h3>◉ Distribuição Geográfica</h3><button class="ed-button" type="button" data-go="Visão geral">Ver Mapa ↗</button></div><div class="ed-ministat" id="edGeo"></div><p class="ed-foot">Top regionais com coordenadas</p><div id="edGeoBars"></div></div>
@@ -2024,7 +2028,10 @@ function countMap(rows,key){const m=new Map();rows.forEach(r=>{let v=field(r,key
 function bars(data,color){const max=Math.max(1,...data.map(x=>x[1]));return data.length?data.map(([name,n])=>`<div class="ed-bar-row"><label title="${safe(name)}">${safe(name)}</label><div class="ed-bar-bg"><i style="background:${color};width:${(100*n/max).toFixed(1)}%"></i></div><strong>${fmt(n)}</strong></div>`).join(''):'<div class="ed-center">Sem registros no recorte.</div>'}
 function riskCollection(rows){return rows.filter(eligible).map(r=>({r,d:age(r)})).filter(x=>x.d!==null&&x.d>=0)}
 function render(){if(!active)return;const rows=getRows(),all=getAllRows(),total=rows.length,valid=rows.filter(isCoordinateValid);
-const statuses=rows.map(r=>norm(field(r,'STATUS LIST'))),closed=statuses.filter(s=>s==='CONCLUIDO').length,working=statuses.filter(s=>['EM LEVANTAMENTO','EM PROJETO','ANALISE DE LEVANTAMENTO'].includes(s)).length;
+const statuses=rows.map(r=>norm(field(r,'STATUS LIST'))),closed=statuses.filter(s=>s==='CONCLUIDO').length,working=statuses.filter(s=>['EM LEVANTAMENTO','EM PROJETO','ANALISE DE LEVANTAMENTO','CORRECAO DE LEVANTAMENTO'].includes(s)).length;
+const statusCounts=countMap(rows,'STATUS LIST');
+byId('edStatusTotal').textContent=fmt(total)+' registros filtrados · '+fmt(statusCounts.length)+' situações';
+byId('edStatusBreakdown').innerHTML=bars(statusCounts.slice(0,18),'#187d91');
 const ageRows=riskCollection(rows),overdue=ageRows.filter(x=>x.d>10),soon=ageRows.filter(x=>x.d>=7&&x.d<=10);
 byId('edTotal').textContent=fmt(total)+' registros';const pct=total?closed/total*100:0;byId('edCompletion').textContent=pct.toFixed(1).replace('.',',')+'%';byId('edCompletionBar').style.width=pct+'%';
 byId('edStatusCells').innerHTML=stat('Concluídos',closed,'green')+stat('Em andamento',working,'blue')+stat('Vencidos (prazo)',overdue.length,'red')+stat('Vencem em até 3 dias',soon.length,'yellow');
@@ -2054,21 +2061,18 @@ b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();showDashbo
 nav.addEventListener('click',e=>{const button=e.target.closest('button');if(!button||button===b)return;active=false;panel.classList.add('nip-hidden');b.classList.remove('selected')});
 function go(label){const button=[...nav.querySelectorAll('button')].find(x=>norm(x.textContent).includes(norm(label)));if(button)button.click()}
 panel.addEventListener('click',e=>{const target=e.target.closest('[data-go]');if(target)go(target.dataset.go);const risk=e.target.closest('[data-risk-tab]');if(risk){lastRiskTab=risk.dataset.riskTab;panel.querySelectorAll('[data-risk-tab]').forEach(x=>x.classList.toggle('ed-selected',x===risk));render()}});
-byId('edDuplicates').addEventListener('click',()=>{let ids=new Map();getRows().forEach(r=>{const id=field(r,'ID SISCO');if(!id||id==='0')return;ids.set(id,(ids.get(id)||0)+1)});const repeated=[...ids].filter(([,n])=>n>1);alert(repeated.length+' ID(s) SISCO repetido(s) nos registros filtrados, envolvendo '+repeated.reduce((sum,[,n])=>sum+n,0)+' registros. A repetição precisa ser conferida na fonte.')});
-byId('edImport').addEventListener('click',()=>byId('edFile').click());byId('edFile').addEventListener('change',async e=>{
- const file=e.target.files[0];if(!file)return;
- const info=byId('edImportStatus');info.hidden=false;
- try{
-  const content=await file.text();const first=(content.split(/\r?\n/).find(x=>x.trim())||'');
-  const delim=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',';
-  const count=content.split(/\r?\n/).filter(x=>x.trim()).length;
-  info.textContent=file.name+': aproximadamente '+fmt(Math.max(0,count-1))+' linha(s), separador detectado: '+delim+'. Conferência local concluída. Nenhuma informação foi importada para a base compartilhada.';
- }catch(error){info.textContent='Não foi possível ler o arquivo CSV: '+error.message}
- e.target.value='';
-});
+let lastDuplicateGroups=[];
+function duplicates(){const groups=new Map();getRows().forEach(r=>{const id=field(r,'ID SISCO');if(!id||id==='0'||norm(id)==='NAN')return;if(!groups.has(id))groups.set(id,[]);groups.get(id).push(r)});return [...groups].filter(([,rs])=>rs.length>1).sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0],'pt-BR'))}
+function duplicateSummary(rows,key){return [...new Set(rows.map(r=>field(r,key)).filter(Boolean))].join(' / ')||'—'}
+function showDuplicates(){lastDuplicateGroups=duplicates();const total=lastDuplicateGroups.reduce((n,[,rs])=>n+rs.length,0);byId('edDuplicatesInfo').textContent=fmt(lastDuplicateGroups.length)+' ID(s) SISCO repetido(s), envolvendo '+fmt(total)+' registros do recorte atual.';byId('edDuplicatesBody').innerHTML=lastDuplicateGroups.map(([id,rs])=>`<tr><td>${safe(id)}</td><td>${fmt(rs.length)}</td><td>${safe(duplicateSummary(rs,'PROTOCOLO'))}</td><td>${safe(duplicateSummary(rs,'MUNICIPIO'))}</td><td>${safe(duplicateSummary(rs,'STATUS LIST'))}</td></tr>`).join('')||'<tr><td colspan="5">Nenhum ID SISCO repetido no recorte atual.</td></tr>';byId('edDuplicatesPanel').hidden=false;byId('edDuplicatesPanel').scrollIntoView({behavior:'smooth',block:'nearest'})}
+byId('edDuplicates').addEventListener('click',showDuplicates);
+byId('edDuplicatesClose').addEventListener('click',()=>byId('edDuplicatesPanel').hidden=true);
+byId('edDuplicatesExport').addEventListener('click',()=>{const quote=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const lines=[['ID SISCO','OCORRENCIAS','PROTOCOLO','MUNICIPIO','STATUS LIST','LEVANTADOR'].map(quote).join(';')];lastDuplicateGroups.forEach(([id,rs])=>rs.forEach(r=>lines.push([id,rs.length,field(r,'PROTOCOLO'),field(r,'MUNICIPIO'),field(r,'STATUS LIST'),field(r,'LEVANTADOR')].map(quote).join(';'))));const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='NIP_AUDITORIA_ID_SISCO_DUPLICADOS.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500)});
 // Atualiza o painel quando os filtros globais alterarem o conjunto de registros.
-const watch=new MutationObserver(()=>{if(active){const now=getRows().length;if(now!==lastLength){lastLength=now;render()}}});let lastLength=-1;
+const watch=new MutationObserver(()=>{if(active){const now=getRows().length;if(now!==lastLength){lastLength=now;render();if(!byId('edDuplicatesPanel').hidden)showDuplicates()}}});let lastLength=-1;
 const totalIndicator=byId('filtered');if(totalIndicator)watch.observe(totalIndicator,{childList:true,characterData:true,subtree:true});
+// Abre o Dashboard como primeira aba, sem alterar a ordem interna dos painéis existentes.
+setTimeout(()=>{if(!active)showDashboard()},200);
 })();
 </script>
 </body></html>
