@@ -1995,7 +1995,6 @@ panel.innerHTML=`
 <button type="button" class="ed-action" data-go="Prazos"><span class="ed-icon" style="background:#f14a58">◷</span><strong>Projetos Vencidos</strong><small>Prazo acima de 10 dias</small></button>
 <button type="button" class="ed-action" id="edDuplicates"><span class="ed-icon" style="background:#eaa000">⚠</span><strong>Duplicados</strong><small>Verificação por ID SISCO</small></button>
 </div></div>
-<div class="ed-panel" style="margin-top:12px"><div class="ed-summary"><h3>Distribuição por STATUS LIST</h3><small id="edStatusTotal"></small></div><p class="ed-sub">Situações cadastradas na coluna STATUS LIST da planilha; 0 é mantido como categoria própria, sem ser tratado como conclusão.</p><div id="edStatusBreakdown"></div></div>
 <div class="ed-panel" id="edDuplicatesPanel" style="margin-top:12px" hidden><div class="ed-summary"><h3>Auditoria de IDs SISCO repetidos</h3><button type="button" class="ed-button" id="edDuplicatesClose">Fechar</button></div><p class="ed-sub" id="edDuplicatesInfo"></p><div class="ed-wrap-table"><table class="ed-table"><thead><tr><th>ID SISCO</th><th>Ocorrências</th><th>Protocolo(s)</th><th>Município(s)</th><th>STATUS LIST</th></tr></thead><tbody id="edDuplicatesBody"></tbody></table></div><div class="ed-foot">A repetição do ID SISCO é um indício para conferência, não prova de duplicação indevida. A auditoria respeita os filtros operacionais.</div><button type="button" class="ed-button" id="edDuplicatesExport" style="margin-top:9px">Exportar auditoria CSV</button></div>
 <div class="ed-grid ed-grid3">
 <div class="ed-panel"><div class="ed-summary"><h3>Resumo de Status</h3><small id="edTotal">0 registros</small></div><div class="ed-summary"><span>Taxa de conclusão</span><strong id="edCompletion">0%</strong></div><div class="ed-meter"><i id="edCompletionBar" style="width:0%"></i></div><div class="ed-ministat" id="edStatusCells"></div><div class="ed-foot">Situação atual dos registros, conforme STATUS LIST</div></div>
@@ -2029,9 +2028,9 @@ function bars(data,color){const max=Math.max(1,...data.map(x=>x[1]));return data
 function riskCollection(rows){return rows.filter(eligible).map(r=>({r,d:age(r)})).filter(x=>x.d!==null&&x.d>=0)}
 function render(){if(!active)return;const rows=getRows(),all=getAllRows(),total=rows.length,valid=rows.filter(isCoordinateValid);
 const statuses=rows.map(r=>norm(field(r,'STATUS LIST'))),closed=statuses.filter(s=>s==='CONCLUIDO').length,working=statuses.filter(s=>['EM LEVANTAMENTO','EM PROJETO','ANALISE DE LEVANTAMENTO','CORRECAO DE LEVANTAMENTO'].includes(s)).length;
-const statusCounts=countMap(rows,'STATUS LIST');
-byId('edStatusTotal').textContent=fmt(total)+' registros filtrados · '+fmt(statusCounts.length)+' situações';
-byId('edStatusBreakdown').innerHTML=bars(statusCounts.slice(0,18),'#187d91');
+
+
+
 const ageRows=riskCollection(rows),overdue=ageRows.filter(x=>x.d>10),soon=ageRows.filter(x=>x.d>=7&&x.d<=10);
 byId('edTotal').textContent=fmt(total)+' registros';const pct=total?closed/total*100:0;byId('edCompletion').textContent=pct.toFixed(1).replace('.',',')+'%';byId('edCompletionBar').style.width=pct+'%';
 byId('edStatusCells').innerHTML=stat('Concluídos',closed,'green')+stat('Em andamento',working,'blue')+stat('Vencidos (prazo)',overdue.length,'red')+stat('Vencem em até 3 dias',soon.length,'yellow');
