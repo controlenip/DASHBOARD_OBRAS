@@ -2037,7 +2037,16 @@ byId('edStatusCells').innerHTML=stat('Concluídos',closed,'green')+stat('Em anda
 byId('edGeo').innerHTML=stat('Com coordenadas',valid.length,'green')+stat('Sem coordenadas',total-valid.length,'yellow');
 byId('edGeoBars').innerHTML=bars(countMap(valid,'REGIONAL').slice(0,5),'#158997');
 byId('edAlerts').innerHTML=overdue.length?`<div><div style="font-size:31px;color:#bc3737;font-weight:800">${fmt(overdue.length)}</div><strong>obra(s) acima de 10 dias</strong><br><span style="color:#a46912">${fmt(soon.length)} próxima(s) do limite</span></div>`:'<div><span style="font-size:30px;color:#16a66e">✓</span><br><strong>Nenhuma obra vencida nos registros elegíveis com data</strong></div>';
-const stages=[['Em Avaliação',statuses.filter(s=>s.includes('PRE ANALISE')||s.includes('ANALISE')).length,'blue'],['Em Andamento',working,'blue'],['Expurgo em Andamento',statuses.filter(s=>s.includes('EXPURGO')&& !s.includes('CONCLUIDO')).length,'orange'],['Avaliação de Expurgo',statuses.filter(s=>s.includes('AVALIACAO DE EXPURGO')).length,'yellow'],['Concluído',closed,'green']];
+// Cartoes desta faixa: correspondencia EXATA com a coluna STATUS LIST.
+// Nao agrupar 'Pre Analise', 'Em projeto' ou outros status em categorias distintas.
+const stageCount=(name)=>statuses.filter(s=>s===norm(name)).length;
+const stages=[
+ ['Análise de levantamento',stageCount('Análise de levantamento'),'blue'],
+ ['Levantamento em andamento',stageCount('Em levantamento'),'blue'],
+ ['Correção de levantamento',stageCount('Correção de levantamento'),'orange'],
+ ['Notas para expurgos',stageCount('Notas para expurgos'),'yellow'],
+ ['Concluído',stageCount('Concluído'),'green']
+];
 byId('edWorkflow').innerHTML=stages.map(([n,v,c])=>`<div class="ed-stat ${c}"><span>${safe(n)}</span><div class="ed-big">${fmt(v)}</div></div>`).join('');
 const risks={baixo:0,medio:0,alto:0,critico:0};ageRows.forEach(x=>risks[band(x.d)]++);
 byId('edMeanAge').textContent=ageRows.length?(ageRows.reduce((a,x)=>a+x.d,0)/ageRows.length).toFixed(1).replace('.',','):'—';
