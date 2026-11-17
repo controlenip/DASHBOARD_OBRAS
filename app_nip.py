@@ -14,16 +14,10 @@ st.set_page_config(
 # Uma pagina opcional ausente nao pode impedir o dashboard inteiro de abrir.
 ROOT = Path(__file__).resolve().parent
 PAGES = [
+    ("01_dashboard.py", "Dashboard", "dashboard"),
     ("01_visao_geral.py", "Visão Geral", "visao-geral"),
-    ("02_levantadores.py", "Levantadores", "levantadores"),
-    ("03_prazos_prioridades.py", "Prazos e Prioridades", "prazos-prioridades"),
-    ("04_relatorios.py", "Relatórios", "relatorios"),
-    ("05_qualidade_levantamento.py", "Qualidade Levantamento", "qualidade"),
-    ("06_produtividade.py", "Produtividade", "produtividade"),
-    ("07_pre_analise.py", "Pré-Análise", "pre-analise"),
+    ("02_gestao_operacional.py", "Gestão Operacional", "gestao-operacional"),
     ("08_faq_duvidas.py", "FAQ / Dúvidas", "faq"),
-    ("09_croquis.py", "Croquis", "croquis"),
-    ("10_administracao.py", "Administração NIP", "administracao"),
 ]
 
 available = [(name, title, path) for name, title, path in PAGES if (ROOT / "pages" / name).is_file()]

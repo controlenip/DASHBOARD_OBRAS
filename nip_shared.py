@@ -539,6 +539,8 @@ def render_page(page_id: str):
 # Only activate the requested tab on initial load. Never hide the original
 # horizontal navigation or override the original dashboard CSS.
 _PAGE_TABS = {
+    'dashboard': 'nip-tab-dashboard',
+    'operacao': 'nip-tab-operacao',
     'geral': 'nip-tab-geral',
     'equipe': 'nip-tab-equipe',
     'prazos': 'nip-tab-prazos',
@@ -558,6 +560,7 @@ def add_page_controller(html: str, page_id: str) -> str:
         return html
     tab = json.dumps(_PAGE_TABS[page_id])
     js = """<script>
+window.__NIP_FORCE_TAB__ = true;
 window.addEventListener('load', function(){
   const target = document.getElementById(__TAB__);
   if (!target) return;

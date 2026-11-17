@@ -1,26 +1,12 @@
-DASHBOARD NIP - VISAO GERAL / GEO AVANCADO
+DASHBOARD NIP - ATUALIZACAO 17/11/2026
 
-Instalacao:
-1. Fazer backup do repositorio e testar em uma branch separada.
-2. Substituir app_nip.py, nip_shared.py, nip_dashboard_template.html,
-   FAQ_NIP_CONTEUDO.json e a pasta pages/ pelos arquivos do pacote.
-3. Preservar as planilhas oficiais, secrets do GitHub e logo existente.
-4. Executar o app por app_nip.py.
-
-Novos controles na Visao Geral (aba horizontal do HTML):
-- Equipe e raio em linha reta (25/50/100/200 km).
-- Painel de carga, atrasos e obras proximas; clicar no bonequinho seleciona equipe.
-- Filtros complementares por faixas de idade, sem levantador e correcoes.
-- Camada de concentracao visual por obras ou elegiveis atrasadas.
-- Exportacao KML e KMZ; KMZ depende de JSZip na internet.
-- Auditoria de coordenadas e exportacao CSV.
-
-Os filtros novos NAO substituem o recorte oficial CURRENT, nao redistribuem
-obras, nao alteram a base original nem os contadores principais.
-Distancia: linha reta Haversine, nao tempo/rota por estrada.
-Faixa de coordenadas usada na auditoria: retangulo aproximado do Maranhao.
-Coordenadas repetidas nao implicam erro obrigatoriamente.
-
-VALIDACAO EFETUADA: compilar Python; verificar sintaxe JS (20 scripts).
-AINDA NECESSARIO: teste integrado com BASE_LEVANTAMENTO_ATUALIZADA,
-BASE_LIST e LOCALIDADE LEVANTADORES-SANEAMENTO no Streamlit publicado.
+1. Publicar os arquivos deste ZIP no mesmo repositorio da aplicacao Streamlit.
+2. Manter app_nip.py como entrada principal.
+3. BASE_LEVANTAMENTO_ATUALIZADA.xlsx foi substituida pela planilha fornecida em 17/11/2026 (aba NOTAS: 11.927 registros; 32 colunas).
+4. Preservar Secrets ADMIN_PASSWORD, GITHUB_TOKEN e configuracoes do projeto.
+5. As quatro rotas registradas em app_nip.py sao Dashboard, Visao Geral, Gestao Operacional e FAQ.
+6. Gestao Operacional reune Equipes, Prazos, Qualidade e Producao. As rotinas antigas foram mantidas em modulos_legados/ para recuperacao, mas nao sao navegaveis.
+7. Os paineis antigos Relatorios, Pre-Analise e Croquis nao aparecem mais na navegacao. Seus scripts HTML permanecem no arquivo para facilitar eventual reversao; nao se deve usar as funcoes removidas sem testes.
+8. Os indicadores de prazo usam o criterio operacional existente de 10 dias desde despacho (nao representam o prazo contratual por tipo).
+9. Volume concluido em STATUS LIST nao equivale a producao do mes; nao inferir produtividade historica sem datas apropriadas.
+10. Publique em branch de teste primeiro e confira as contagens e filtros no Streamlit.
