@@ -345,13 +345,25 @@ function renderExtras(){let os=renderAges();renderRedis(os);renderHeat(os);rende
 const priorRender=render;render=function(){priorRender();renderExtras()};
 // ---------------- NIP: melhorias aditivas, sem alterar contagens ----------------
 const ext=(id,html)=>{let d=document.createElement('section');d.className='nip-box';d.id=id;d.innerHTML=html;return d};
-const quick=ext('nipQuick','<h2>Filtros rápidos de situação operacional</h2><div class="nip-enhance-bar" id="nipQuickBtns"></div><p class="nip-mini" id="nipQuickInfo">Os atalhos apenas refinam a visualização; não alteram os critérios de elegibilidade.</p>');
+const quick=ext('nipQuick','<h2>Filtros por prazo (coluna PRAZO)</h2><div class="nip-enhance-bar" id="nipQuickBtns"></div><p class="nip-mini" id="nipQuickInfo">Os atalhos apenas refinam a visualização; não alteram os critérios de elegibilidade.</p>');
 panels[0].insertBefore(quick,panels[0].querySelector('.content'));
 let quickMode='';
-const quickModes=[['','Todas'],['late','Acima de 10 dias'],['soon','Vencem em 72h'],['priority','Prioritárias'],['nostaff','Sem levantador'],['nocoord','Sem coordenadas']];
+const quickModes=[['','Todas'],['vencido','VENCIDO'],['no_prazo','NO PRAZO'],['vencimento_proximo','VENCIMENTO PRÓXIMO'],['cronograma','CRONOGRAMA']];
 const quickBar=$n('nipQuickBtns');quickBar.innerHTML=quickModes.map(([k,label])=>`<button type="button" data-quick="${k}">${label}</button>`).join('');
+// Mesmo filtro de prazo na lateral: sincronizado com os botoes da Visao Geral.
+const nipPrazoSideContainer=document.createElement('div');
+nipPrazoSideContainer.id='nipPrazoSidebarField';
+nipPrazoSideContainer.className='field';
+nipPrazoSideContainer.innerHTML='<label for="nipPrazoSidebarFilter">Prazo</label><select id="nipPrazoSidebarFilter" aria-label="Filtrar obras por prazo"><option value="">Todas</option><option value="vencido">VENCIDO</option><option value="no_prazo">NO PRAZO</option><option value="vencimento_proximo">VENCIMENTO PRÓXIMO</option><option value="cronograma">CRONOGRAMA</option></select>';
+const nipPrazoSideSelect=nipPrazoSideContainer.querySelector('select');
+const nipPrazoSideAnchor=document.getElementById('filters');
+if(nipPrazoSideAnchor){nipPrazoSideAnchor.insertAdjacentElement('afterend',nipPrazoSideContainer)}
+
 const oldGlobalRender=render;
-function quickMatch(r){if(!quickMode)return true;let d=agParse(r['DATA DESPACHO']),days=d===null?null:agDays(d),pr=normalStatus(r.PRIORIDADE);switch(quickMode){case 'late':return !!workloadStatus(r)&&days!==null&&days>10;case 'soon':return !!workloadStatus(r)&&days!==null&&days>=7&&days<=10;case 'priority':return !!pr&&pr!=='0'&&pr!=='NORMAL'&&pr!=='BAIXA';case 'nostaff':return !val(r,'LEVANTADOR')||normalStatus(r.LEVANTADOR)==='SEM LEVANTADOR';case 'nocoord':return !coord(r)||!MARANHAO_BOUNDS.contains(coord(r));default:return true}}
+// As classificações correspondem exclusivamente à coluna PRAZO (B) da aba NOTAS.
+// Não confundir com idade calculada da DATA DESPACHO nem inventar prazos quando B estiver vazia.
+function nipQuickPrazo(r){return String(r['PRAZO']??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,' ').toUpperCase()}
+function quickMatch(r){if(!quickMode)return true;const prazo=nipQuickPrazo(r);switch(quickMode){case 'vencido':return prazo==='VENCIDO';case 'no_prazo':return prazo==='NO PRAZO';case 'vencimento_proximo':return prazo==='VENCIMENTO PROXIMO';case 'cronograma':return prazo==='CRONOGRAMA';default:return true}}
 // Refine DATA temporarily only while the established render function executes.
 // All original filters and counters remain owned by the original implementation.
 // The quick filter and map options operate on the same source records.
@@ -364,18 +376,31 @@ render=function(){
    oldGlobalRender();
  }finally{DATA=original}
  enhanceRefresh();
+ nipUpdateQuickButtons();
 };
-function nipUpdateQuickButtons(){quickBar.querySelectorAll('[data-quick]').forEach(b=>{let active=b.dataset.quick===quickMode;b.classList.toggle('on',active);b.classList.toggle('nip-quick-selected',active);b.setAttribute('aria-pressed',String(active))})}
+function nipUpdateQuickButtons(){if(nipPrazoSideSelect&&nipPrazoSideSelect.value!==quickMode)nipPrazoSideSelect.value=quickMode;quickBar.querySelectorAll('[data-quick]').forEach(b=>{let active=b.dataset.quick===quickMode;b.classList.toggle('on',active);b.classList.toggle('nip-quick-selected',active);b.setAttribute('aria-pressed',String(active))});
+ const origem=typeof DATA!=='undefined'&&Array.isArray(DATA)?DATA:[];
+ const classificados=origem.filter(r=>['VENCIDO','NO PRAZO','VENCIMENTO PROXIMO','CRONOGRAMA'].includes(nipQuickPrazo(r))).length;
+ const info=$n('nipQuickInfo');if(info){info.textContent=classificados===0?'A coluna PRAZO (B) da base está sem classificações. Preencha VENCIDO, NO PRAZO, VENCIMENTO PRÓXIMO ou CRONOGRAMA na planilha para ativar os resultados. Os filtros não calculam prazos a partir do despacho.':`Filtros baseados na coluna PRAZO (B), sem alterar as regras originais da carteira. ${classificados.toLocaleString('pt-BR')} registro(s) com classificação reconhecida na base.`;}
+}
 nipUpdateQuickButtons();
 quickBar.onclick=e=>{let b=e.target.closest('[data-quick]');if(!b)return;
  quickMode=b.dataset.quick;
  let layer=document.getElementById('nipOpsLayerType');
- if(layer){let matching={late:'late',priority:'priority',nostaff:'unassigned'};
-   // Keep staff concentration active when a staff member is selected.
-   if(layer.value!=='staff')layer.value=matching[quickMode]||'none';
- }
+ if(layer && layer.value!=='staff')layer.value='none'; // O filtro por prazo não ativa camadas operacionais antigas.
  nipUpdateQuickButtons();render();
 };
+// Usa o mesmo manipulador que os atalhos do mapa, sem duplicar logica ou contagens.
+nipPrazoSideSelect.addEventListener('change',()=>{
+ const b=quickBar.querySelector('[data-quick="'+nipPrazoSideSelect.value+'"]');
+ if(b)b.click();
+});
+// O botao global de limpar filtros tambem limpa a classificacao de prazo.
+const nipPrazoReset=document.getElementById('reset');
+if(nipPrazoReset)nipPrazoReset.addEventListener('click',()=>{
+ if(quickMode){const b=quickBar.querySelector('[data-quick=""]');if(b)b.click()}
+ else nipUpdateQuickButtons();
+});
 const municipal=ext('nipMunicipal','<h2>Análise geográfica por município</h2><p class="nip-mini">Clique no município para filtrar as obras e aproximar o mapa. Obras sem coordenadas continuam na contagem.</p><div class="nip-inline"><input id="nipCityQuery" placeholder="Pesquisar município"/><button id="nipCityReset" type="button">Limpar seleção de município</button></div><div class="nip-table-wrap"><table class="nip-city-table"><thead><tr><th>Município</th><th>Total</th><th>Elegíveis</th><th>Acima de 10 dias</th><th>Prioritárias</th><th>Sem levantador</th></tr></thead><tbody id="nipCityBody"></tbody></table></div>');
 panels[1].prepend(municipal);
 const ranking=ext('nipLoadRank','<h2>Ranking de carga e idade média por levantador</h2><p class="nip-mini">Obras elegíveis pelos mesmos critérios SAP/SISCO/LIST. Idade média calculada somente com despachos válidos.</p><div class="nip-table-wrap"><table><thead><tr><th>Levantador</th><th>LIST 0</th><th>Em levantamento</th><th>Correção</th><th>Total</th><th>Idade média (dias)</th><th>Alerta</th></tr></thead><tbody id="nipLoadBody"></tbody></table></div>');
@@ -1531,7 +1556,7 @@ if(prod){const update=()=>{const all=production(),staff=$('pdStaff')?.value||'',
 const preBox=add('nip-tab-preanalise','nipUpPreFlow','Fluxo de Pré-Análise — entradas × saídas','Entradas: Q preenchida; análises: U preenchida. A fila atual é Q preenchida e U vazia. Não há histórico de mudança de status.','preCards');
 if(preBox){const update=()=>{const analyst=$('preAnalyst')?.value||'',status=$('preStatus')?.value||'',search=($('preSearch')?.value||'').toLowerCase().trim(),rows=pre().filter(r=>(!analyst||r.analista===analyst)&&(!status||r.status===status)&&(!search||String(r.nota||'').toLowerCase().includes(search)||String(r.nota_sgo||'').toLowerCase().includes(search)));const t=today(),start=new Date(t+'T12:00:00Z');start.setUTCDate(start.getUTCDate()-29);const a=start.toISOString().slice(0,10),inRows=rows.filter(r=>valid(r.q)&&r.q>=a&&r.q<=t),outRows=rows.filter(r=>valid(r.u)&&r.u>=a&&r.u<=t),pending=rows.filter(r=>valid(r.q)&&!valid(r.u)&&r.q<=t),inconsistent=rows.filter(r=>valid(r.u)&&(!valid(r.q)||days(r.q,r.u)<0)||(valid(r.q)&&r.q>t));const mapQ=new Map(count(inRows,r=>r.q)),mapU=new Map(count(outRows,r=>r.u));const byDay=[];for(let i=0;i<30;i++){const d=new Date(start);d.setUTCDate(d.getUTCDate()+i);const k=d.toISOString().slice(0,10);byDay.push([k,fmt(mapQ.get(k)||0),fmt(mapU.get(k)||0)])}const top=count(outRows,r=>r.analista).slice(0,10);preBox.innerHTML=`<div class="nip-upgrid">${metric('Recebidas do campo (Q), 30 dias',fmt(inRows.length))}${metric('Analisadas (U), 30 dias',fmt(outRows.length))}${metric('Diferença de fluxo no período',fmt(inRows.length-outRows.length))}${metric('Fila atual Q sem U',fmt(pending.length))}${metric('Datas inconsistentes',fmt(inconsistent.length))}</div><h3>Movimentação diária nos últimos 30 dias</h3>${table(['Data','Recebidas do campo (Q)','Analisadas (U)'],byDay.slice().reverse())}<h3>Analistas com mais análises nos últimos 30 dias</h3>${table(['Analista de Pré-Análise (T)','Registros com U'],top.map(([k,v])=>[k,fmt(v)]))}<div class="nip-upcontrols"><button id="nipUpPreExport">Exportar inconsistências de data (CSV)</button></div><p>Diferença entre entradas e análises não é igual à variação histórica da fila: podem existir obras com Q e U em períodos diferentes. O status E é atual e não comprova autoria da alteração.</p>`;$('nipUpPreExport').onclick=()=>exportCsv('nip_preanalise_datas_inconsistentes.csv',['Nota','SGO','Analista','Data do levantamento (Q)','Data da análise (U)','Status atual (E)'],inconsistent.map(r=>[r.nota,r.nota_sgo,r.analista,r.q,r.u,r.status]))};['preAnalyst','preStatus','prePeriod','preDate'].forEach(id=>$(id)?.addEventListener('change',update));$('preSearch')?.addEventListener('input',update);update()}
 // 8. FAQ — concise release notes within existing manual.
-const faq=$('nip-tab-faq');if(faq&&!$('nipUpFaqChanges')){const x=document.createElement('section');x.id='nipUpFaqChanges';x.className='nip-upgrade';x.innerHTML='<h2>Novidades e regras desta versão</h2><p>A navegação foi simplificada para Dashboard, Visão Geral, Gestão Operacional e FAQ. A Gestão Operacional reúne Equipes, Prazos, Qualidade e Produção, com contagens diretas da aba NOTAS. Relatórios, Pré-Análise e Croquis foram retirados da navegação.</p><p>Os filtros operacionais e regras de atribuição originais permanecem. A base NOTAS foi atualizada com a planilha de 17/11/2026. Produção na aba NOTAS é um estoque por status, não histórico de entregas; FAQ local, sem IA.</p>';faq.prepend(x)}
+const faqPrazo=$('nip-tab-faq');if(faqPrazo&&!$('nipPrazoQuickFaq')){const d=document.createElement('section');d.id='nipPrazoQuickFaq';d.className='nip-upgrade';d.innerHTML='<h2>Filtros de prazo na Visão Geral</h2><p>Os atalhos VENCIDO, NO PRAZO, VENCIMENTO PRÓXIMO e CRONOGRAMA consultam a classificação da coluna PRAZO (B) da aba NOTAS. Não substituem o critério de idade desde o despacho usado em outros indicadores. Se a coluna PRAZO estiver vazia, nenhum registro poderá ser atribuído automaticamente a essas quatro categorias. Atualize a planilha com as classificações oficiais para utilizá-las.</p>';faqPrazo.appendChild(d);} const faq=$('nip-tab-faq');if(faq&&!$('nipUpFaqChanges')){const x=document.createElement('section');x.id='nipUpFaqChanges';x.className='nip-upgrade';x.innerHTML='<h2>Novidades e regras desta versão</h2><p>A navegação foi simplificada para Dashboard, Visão Geral, Gestão Operacional e FAQ. A Gestão Operacional reúne Equipes, Prazos, Qualidade e Produção, com contagens diretas da aba NOTAS. Relatórios, Pré-Análise e Croquis foram retirados da navegação.</p><p>Os filtros operacionais e regras de atribuição originais permanecem. A base NOTAS foi atualizada com a planilha de 17/11/2026. Produção na aba NOTAS é um estoque por status, não histórico de entregas; FAQ local, sem IA.</p>';faq.prepend(x)}
 })();
 </script>
 <style id="nipGeoToolsStyle">
