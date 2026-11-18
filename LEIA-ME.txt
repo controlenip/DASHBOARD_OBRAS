@@ -1,12 +1,18 @@
-DASHBOARD NIP - ATUALIZACAO 17/11/2026
+NIP - CORRECAO DOS FILTROS DE PRAZO NO MAPA
 
-1. Publicar os arquivos deste ZIP no mesmo repositorio da aplicacao Streamlit.
-2. Manter app_nip.py como entrada principal.
-3. BASE_LEVANTAMENTO_ATUALIZADA.xlsx foi substituida pela planilha fornecida em 17/11/2026 (aba NOTAS: 11.927 registros; 32 colunas).
-4. Preservar Secrets ADMIN_PASSWORD, GITHUB_TOKEN e configuracoes do projeto.
-5. As quatro rotas registradas em app_nip.py sao Dashboard, Visao Geral, Gestao Operacional e FAQ.
-6. Gestao Operacional reune Equipes, Prazos, Qualidade e Producao. As rotinas antigas foram mantidas em modulos_legados/ para recuperacao, mas nao sao navegaveis.
-7. Os paineis antigos Relatorios, Pre-Analise e Croquis nao aparecem mais na navegacao. Seus scripts HTML permanecem no arquivo para facilitar eventual reversao; nao se deve usar as funcoes removidas sem testes.
-8. Os indicadores de prazo usam o criterio operacional existente de 10 dias desde despacho (nao representam o prazo contratual por tipo).
-9. Volume concluido em STATUS LIST nao equivale a producao do mes; nao inferir produtividade historica sem datas apropriadas.
-10. Publique em branch de teste primeiro e confira as contagens e filtros no Streamlit.
+Substituir na raiz do repositorio GitHub:
+  nip_dashboard_template.html
+  nip_shared.py
+
+Nao alterar app_nip.py, pages/, planilhas, FAQ, nem outros arquivos.
+
+O mapa e os indicadores agora filtram por PRAZO diretamente na rotina principal.
+O menu lateral e os botoes da Visao Geral continuam sincronizados.
+Os quatro totais de classificacao recebidos da planilha sao exibidos no painel.
+
+IMPORTANTE: a ultima planilha ANEXADA (17/11) tinha PRAZO vazio.
+A planilha ATUALIZADA NO GITHUB nao foi baixada/testada integralmente aqui.
+Se o aviso indicar 0 classificacoes, verifique se a planilha foi salva com
+resultados das formulas disponiveis para leitura (openpyxl/pandas data_only).
+
+Reinicie o Streamlit e atualize o navegador com Ctrl+F5.

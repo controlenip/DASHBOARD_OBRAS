@@ -243,7 +243,14 @@ $('nipSearchRows').addEventListener('click',function(e){
  if(marker){cluster.zoomToShowLayer(marker,()=>marker.openPopup());}
  $('map').scrollIntoView({behavior:'smooth',block:'center'});
 });
-const nipMarkerCache=new WeakMap();function render(){CURRENT=DATA.filter(r=>{for(const [k] of FIELDS){let selected=multiValues(sel[k]);if(selected.length&&!selected.includes(val(r,k)||'(Vazio)'))return false}let d=date(r['DATA DESPACHO']);if($('from').value&&(!d||d<$('from').value))return false;if($('to').value&&(!d||d>$('to').value))return false;if($('noCoord').checked&&coord(r))return false;if($('noName').checked&&!empty(r.NOME))return false;let q=$('q').value.trim().toLocaleLowerCase('pt-BR');if(q&&!['PROTOCOLO','ID SISCO','NOME','MUNICIPIO','ENDEREÇO'].some(k=>val(r,k).toLocaleLowerCase('pt-BR').includes(q)))return false;return true});let valid=CURRENT.filter(coord);missingRows=CURRENT.filter(r=>!coord(r));$('all').textContent=DATA.length.toLocaleString('pt-BR');$('filtered').textContent=CURRENT.length.toLocaleString('pt-BR');$('geocoded').textContent=valid.length.toLocaleString('pt-BR');$('missing').textContent=missingRows.length.toLocaleString('pt-BR');$('nameless').textContent=CURRENT.filter(r=>empty(r.NOME)).length.toLocaleString('pt-BR');let counts={};CURRENT.forEach(r=>{let k=val(r,'STATUS LIST')||'(Vazio)';counts[k]=(counts[k]||0)+1});$('statuses').innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="rowstat"><span title="${esc(k)}">${esc(k)}</span><b>${v.toLocaleString('pt-BR')}</b></div>`).join('')||'Nenhuma obra';cluster.clearLayers();let bounds=[],batch=[];for(let r of valid){let c=coord(r);let m=nipMarkerCache.get(r);if(!m){m=L.marker(c,{icon:nipMarkerIcon(r)});m.bindPopup(()=>popup(r),{minWidth:240,maxWidth:350,maxHeight:Math.max(250,Math.floor(map.getSize().y*0.68)),autoPan:true,autoPanPaddingTopLeft:[22,28],autoPanPaddingBottomRight:[28,42],keepInView:true});nipMarkerCache.set(r,m)}batch.push(m);bounds.push(c)}cluster.addLayers(batch);adjustMapToFiltered(bounds);renderWorkload();$('missingCount').textContent=`(${missingRows.length})`;renderMissing();nipRenderSearchResults();setTimeout(()=>map.invalidateSize(),100)}
+const nipMarkerCache=new WeakMap();function render(){CURRENT=DATA.filter(r=>{
+// Filtra a carteira diretamente no mesmo conjunto usado pelos marcadores, KPIs e exportacao.
+// Nunca substitui DATA nem recalcula o prazo usando DATA DESPACHO.
+if(window.nipPrazoAtivo){
+ const esperado={vencido:'VENCIDO',no_prazo:'NO PRAZO',vencimento_proximo:'VENCIMENTO PROXIMO',cronograma:'CRONOGRAMA'}[window.nipPrazoAtivo];
+ if(esperado && normalStatus(r['PRAZO'])!==esperado)return false;
+}
+for(const [k] of FIELDS){let selected=multiValues(sel[k]);if(selected.length&&!selected.includes(val(r,k)||'(Vazio)'))return false}let d=date(r['DATA DESPACHO']);if($('from').value&&(!d||d<$('from').value))return false;if($('to').value&&(!d||d>$('to').value))return false;if($('noCoord').checked&&coord(r))return false;if($('noName').checked&&!empty(r.NOME))return false;let q=$('q').value.trim().toLocaleLowerCase('pt-BR');if(q&&!['PROTOCOLO','ID SISCO','NOME','MUNICIPIO','ENDEREÇO'].some(k=>val(r,k).toLocaleLowerCase('pt-BR').includes(q)))return false;return true});let valid=CURRENT.filter(coord);missingRows=CURRENT.filter(r=>!coord(r));$('all').textContent=DATA.length.toLocaleString('pt-BR');$('filtered').textContent=CURRENT.length.toLocaleString('pt-BR');$('geocoded').textContent=valid.length.toLocaleString('pt-BR');$('missing').textContent=missingRows.length.toLocaleString('pt-BR');$('nameless').textContent=CURRENT.filter(r=>empty(r.NOME)).length.toLocaleString('pt-BR');let counts={};CURRENT.forEach(r=>{let k=val(r,'STATUS LIST')||'(Vazio)';counts[k]=(counts[k]||0)+1});$('statuses').innerHTML=Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="rowstat"><span title="${esc(k)}">${esc(k)}</span><b>${v.toLocaleString('pt-BR')}</b></div>`).join('')||'Nenhuma obra';cluster.clearLayers();let bounds=[],batch=[];for(let r of valid){let c=coord(r);let m=nipMarkerCache.get(r);if(!m){m=L.marker(c,{icon:nipMarkerIcon(r)});m.bindPopup(()=>popup(r),{minWidth:240,maxWidth:350,maxHeight:Math.max(250,Math.floor(map.getSize().y*0.68)),autoPan:true,autoPanPaddingTopLeft:[22,28],autoPanPaddingBottomRight:[28,42],keepInView:true});nipMarkerCache.set(r,m)}batch.push(m);bounds.push(c)}cluster.addLayers(batch);adjustMapToFiltered(bounds);renderWorkload();$('missingCount').textContent=`(${missingRows.length})`;renderMissing();nipRenderSearchResults();setTimeout(()=>map.invalidateSize(),100)}
 function renderMissing(){let q=$('missingSearch').value.trim().toLowerCase();let rows=missingRows.filter(r=>!q||[r.PROTOCOLO,r.MUNICIPIO,r.NOME,r['ID SISCO']].some(v=>String(v??'').toLowerCase().includes(q)));$('missingList').innerHTML=rows.slice(0,120).map(r=>`<div class="missingitem"><b>${fmt(r.PROTOCOLO)}</b> — ${fmt(r.MUNICIPIO)}<div>${fmt(r['STATUS LIST'])} | ${fmt(r.NOME)}</div></div>`).join('')||'<p>Nenhum registro.</p>';if(rows.length>120)$('missingList').insertAdjacentHTML('beforeend',`<p class="notice">Exibindo 120 de ${rows.length}. Use a busca ou exporte CSV para visualizar todos.</p>`)}
 for(let id of ['q','from','to','noCoord','noName'])$(id).addEventListener('input',render);$('missingSearch').addEventListener('input',renderMissing);$('reset').onclick=()=>{for(let s of Object.values(sel))multiSet(s,[],false);for(let id of ['q','from','to'])$(id).value='';$('noCoord').checked=$('noName').checked=false;render()};$('csv').onclick=()=>{let keys=Object.keys(DATA[0]||{}),csv='\ufeff'+keys.join(';')+'\r\n'+CURRENT.map(r=>keys.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='obras_filtradas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000)};
 $('file').addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return;if(!window.XLSX){alert('Biblioteca de leitura Excel não carregada. Verifique a conexão com a internet.');return}try{let b=await f.arrayBuffer(),wb=XLSX.read(b,{type:'array',cellDates:true}),ws=wb.Sheets.NOTAS;if(!ws)throw Error('A planilha não possui a aba NOTAS');let records=XLSX.utils.sheet_to_json(ws,{defval:'',raw:false});if(!records.length||!('STATUS LIST' in records[0])||!('LATITUDE' in records[0]))throw Error('Cabeçalhos obrigatórios ausentes na aba NOTAS');window.nipBeforeImport?.(DATA,f.name);DATA=records.filter(r=>r['ID SISCO']||r.PROTOCOLO);window.nipAfterImport?.(DATA,f.name);$('source').textContent=f.name+' • '+DATA.length.toLocaleString('pt-BR')+' registros • importado localmente';options();render()}catch(err){alert('Não foi possível importar: '+err.message)}e.target.value=''});
@@ -348,6 +355,7 @@ const ext=(id,html)=>{let d=document.createElement('section');d.className='nip-b
 const quick=ext('nipQuick','<h2>Filtros por prazo (coluna PRAZO)</h2><div class="nip-enhance-bar" id="nipQuickBtns"></div><p class="nip-mini" id="nipQuickInfo">Os atalhos apenas refinam a visualização; não alteram os critérios de elegibilidade.</p>');
 panels[0].insertBefore(quick,panels[0].querySelector('.content'));
 let quickMode='';
+window.nipPrazoAtivo='';
 const quickModes=[['','Todas'],['vencido','VENCIDO'],['no_prazo','NO PRAZO'],['vencimento_proximo','VENCIMENTO PRÓXIMO'],['cronograma','CRONOGRAMA']];
 const quickBar=$n('nipQuickBtns');quickBar.innerHTML=quickModes.map(([k,label])=>`<button type="button" data-quick="${k}">${label}</button>`).join('');
 // Mesmo filtro de prazo na lateral: sincronizado com os botoes da Visao Geral.
@@ -372,7 +380,9 @@ function nipSelectedMapStaff(){let el=document.getElementById('nipOpsLayerStaff'
 render=function(){
  let original=DATA,staff=nipSelectedMapStaff();
  try{
-   if(quickMode||staff)DATA=original.filter(r=>(!quickMode||quickMatch(r))&&(!staff||nipOpsStaffName(r)===staff));
+   // PRAZO e aplicado no filtro central (CURRENT), inclusive no mapa.
+   // Mantem a opcao existente de selecionar uma equipe no mapa.
+   if(staff)DATA=original.filter(r=>nipOpsStaffName(r)===staff);
    oldGlobalRender();
  }finally{DATA=original}
  enhanceRefresh();
@@ -380,12 +390,22 @@ render=function(){
 };
 function nipUpdateQuickButtons(){if(nipPrazoSideSelect&&nipPrazoSideSelect.value!==quickMode)nipPrazoSideSelect.value=quickMode;quickBar.querySelectorAll('[data-quick]').forEach(b=>{let active=b.dataset.quick===quickMode;b.classList.toggle('on',active);b.classList.toggle('nip-quick-selected',active);b.setAttribute('aria-pressed',String(active))});
  const origem=typeof DATA!=='undefined'&&Array.isArray(DATA)?DATA:[];
- const classificados=origem.filter(r=>['VENCIDO','NO PRAZO','VENCIMENTO PROXIMO','CRONOGRAMA'].includes(nipQuickPrazo(r))).length;
- const info=$n('nipQuickInfo');if(info){info.textContent=classificados===0?'A coluna PRAZO (B) da base está sem classificações. Preencha VENCIDO, NO PRAZO, VENCIMENTO PRÓXIMO ou CRONOGRAMA na planilha para ativar os resultados. Os filtros não calculam prazos a partir do despacho.':`Filtros baseados na coluna PRAZO (B), sem alterar as regras originais da carteira. ${classificados.toLocaleString('pt-BR')} registro(s) com classificação reconhecida na base.`;}
+ const contagem={VENCIDO:0,'NO PRAZO':0,'VENCIMENTO PROXIMO':0,CRONOGRAMA:0};
+ const temCampo=origem.some(r=>Object.prototype.hasOwnProperty.call(r,'PRAZO'));
+ for(const r of origem){let v=nipQuickPrazo(r);if(Object.prototype.hasOwnProperty.call(contagem,v))contagem[v]++}
+ const classificados=Object.values(contagem).reduce((a,b)=>a+b,0);
+ const info=$n('nipQuickInfo');
+ if(info){
+  if(!temCampo)info.textContent='ALERTA: a coluna PRAZO não chegou ao dashboard. Verifique a aba NOTAS e a atualização da base no Streamlit.';
+  else if(classificados===0)info.textContent='ALERTA: a coluna PRAZO chegou sem classificações reconhecidas. Verifique se os resultados das fórmulas estão salvos no Excel e se o Streamlit utiliza a base atualizada.';
+  else info.textContent='Classificações recebidas da base: VENCIDO '+contagem.VENCIDO.toLocaleString('pt-BR')+' · NO PRAZO '+contagem['NO PRAZO'].toLocaleString('pt-BR')+' · VENCIMENTO PRÓXIMO '+contagem['VENCIMENTO PROXIMO'].toLocaleString('pt-BR')+' · CRONOGRAMA '+contagem.CRONOGRAMA.toLocaleString('pt-BR')+'.';
+  if(quickMode){const key={vencido:'VENCIDO',no_prazo:'NO PRAZO',vencimento_proximo:'VENCIMENTO PROXIMO',cronograma:'CRONOGRAMA'}[quickMode];info.textContent+=' Selecionado: '+quickMode.replaceAll('_',' ').toUpperCase()+' ('+contagem[key]+' na base antes dos demais filtros).'}
+ }
 }
 nipUpdateQuickButtons();
 quickBar.onclick=e=>{let b=e.target.closest('[data-quick]');if(!b)return;
  quickMode=b.dataset.quick;
+ window.nipPrazoAtivo=quickMode;
  let layer=document.getElementById('nipOpsLayerType');
  if(layer && layer.value!=='staff')layer.value='none'; // O filtro por prazo não ativa camadas operacionais antigas.
  nipUpdateQuickButtons();render();

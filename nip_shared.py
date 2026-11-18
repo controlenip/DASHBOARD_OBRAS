@@ -137,11 +137,17 @@ def get_shared_base():
 def parse_notas(blob:bytes):
     df=pd.read_excel(io.BytesIO(blob),sheet_name='NOTAS',engine='openpyxl',dtype=object)
     df.columns=[str(c).strip() for c in df.columns]
+    # Reconhece PRAZO mesmo se o Excel exportar espacos especiais no cabecalho.
+    import unicodedata
+    if 'PRAZO' not in df.columns:
+        pra_col=next((c for c in df.columns
+                      if unicodedata.normalize('NFKC',c).strip().upper()=='PRAZO'), None)
+        if pra_col is not None:df=df.rename(columns={pra_col:'PRAZO'})
     missing=[c for c in REQUIRED if c not in df.columns]
     if missing:raise ValueError('Aba NOTAS sem as colunas: '+', '.join(missing))
     # Match exactly the 22 columns and date formats of the original HTML.
     original_fields = ['ID SISCO','PROTOCOLO','TIPO NOTA','STATUS SAP','STATUS SISCO',
-        'STATUS LIST','CONTRATO','PRIORIDADE','SGO','Nº SGO','N° SGO','NÚMERO SGO','REGIONAL','MUNICIPIO','LEVANTADOR','DATA DESPACHO',
+        'STATUS LIST','PRAZO','CONTRATO','PRIORIDADE','SGO','Nº SGO','N° SGO','NÚMERO SGO','REGIONAL','MUNICIPIO','LEVANTADOR','DATA DESPACHO',
         'NOME','LATITUDE','LONGITUDE','DISTANCIA BT','DISTANCIA MT',
         'POSTES PREVISTOS TOTAL','ENDEREÇO','LOCALIDADE','INFORMAÇÕES',
         'ÁREA DE ATUAÇÃO (LEVANTADOR)','INCLUIR_DASH',
