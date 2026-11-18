@@ -791,6 +791,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)renderExtr
 // Expose apenas a acao de reset; estado interno dos filtros permanece encapsulado.
 window.nipResetMapState=function(){
   quickMode='';
+  window.nipPrazoAtivo=''; // Mantem o filtro central do mapa e os KPIs sincronizados.
   const layer=document.getElementById('nipOpsLayerType');if(layer)layer.value='none';
   const staff=document.getElementById('nipOpsLayerStaff');if(staff)staff.value='';
   const city=document.getElementById('nipCityQuery');if(city)city.value='';
